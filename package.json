@@ -1,0 +1,30 @@
+{
+  "name": "get-scrud",
+  "version": "0.1.0",
+  "description": "Client for SCRUD style rest APIs",
+  "main": "index.js",
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doesdev/get-scrud.git"
+  },
+  "keywords": [
+    "scrud",
+    "api",
+    "client"
+  ],
+  "author": "Andrew Carpenter (https://github.com/doesdev)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/doesdev/get-scrud/issues"
+  },
+  "homepage": "https://github.com/doesdev/get-scrud#readme",
+  "devDependencies": {
+    "ava": "^0.21.0"
+  },
+  "dependencies": {
+    "axios": "^0.16.2"
+  }
+}
