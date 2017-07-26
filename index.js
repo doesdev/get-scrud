@@ -61,7 +61,7 @@ module.exports = (opts = {}) => {
         timeout: opts.timeout || timeout,
         headers: {'Content-Type': 'application/json'}
       }
-      if (jwt) options.headers.Authorization = 'Bearer ' + jwt
+      if (jwt) options.headers.Authorization = `Bearer ${jwt}`
 
       request(options).then((res) => {
         let out = res.data || {}
