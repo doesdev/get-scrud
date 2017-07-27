@@ -65,7 +65,7 @@ module.exports = (opts = {}) => {
 
       request(options).then((res) => {
         let out = res.data || {}
-        if (out.hasOwnProperty('error')) return reject(out.error)
+        if (out.error) return reject(out.error)
         out = out.hasOwnProperty('data') ? out.data : out
         return resolve(out)
       }).catch((e) => {

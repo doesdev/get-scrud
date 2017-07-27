@@ -12,7 +12,7 @@ $ npm install --save get-scrud
 
 #### Module ships single function which accepts options and returns main function
 
-### `const apiCall = require('get-scrud')(*opts)`
+#### `const apiCall = require('get-scrud')(*opts)`
 
 - **opts** *[object - required]*
   - **host** *[string - required]* (ex. `'jsonplaceholder.typicode.com'`)
@@ -22,7 +22,7 @@ $ npm install --save get-scrud
 
 #### Main function returns `Promise` that resolves with JSON parsed response data
 
-### `apiCall(*resource, *action, [*id, *body, *jwt])`
+#### `apiCall(*resource, *action, [*id, *body, *jwt])`
 
 - **resource** *[string - required]* (ex. `'posts'`)
 - **action** *[string - required]* (ex. `'search'`)
