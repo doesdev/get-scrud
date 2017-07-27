@@ -22,7 +22,7 @@ $ npm install --save get-scrud
 
 #### Main function returns `Promise` that resolves with JSON parsed response data
 
-### `apiCall(*resource, *action, *[id, *body, *jwt])`
+### `apiCall(*resource, *action, [*id, *body, *jwt])`
 
 - **resource** *[string - required]* (ex. `'posts'`)
 - **action** *[string - required]* (ex. `'search'`)
