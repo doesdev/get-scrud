@@ -3,7 +3,8 @@
 // setup
 import test from 'ava'
 import getScrud from './index'
-const baseOpts = {host: 'jsonplaceholder.typicode.com', port: 443}
+const timeout = '30s'
+const baseOpts = {host: 'jsonplaceholder.typicode.com', port: 443, timeout}
 const apiCall = getScrud(baseOpts)
 const jwt = 'abbc123'
 

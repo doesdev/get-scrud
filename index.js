@@ -30,11 +30,12 @@ const actions = {
 }
 
 // globals
-let timeout = ms('1m')
+let defTimeout = ms('1m')
 
 // Exports
 module.exports = (opts = {}) => {
   opts.port = opts.port || 443
+  let timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout
   let basePath = opts.basePath ? `/${opts.basePath.replace(/^\//, '')}` : ''
   if (opts.host && opts.port !== 80 && opts.port !== 443) {
     opts.host = `${opts.host}:${opts.port}`
@@ -59,7 +60,7 @@ module.exports = (opts = {}) => {
         url: `${protocol}//${opts.host}${reqPath}`,
         method,
         data: body,
-        timeout: opts.timeout || timeout,
+        timeout,
         headers: {'Content-Type': 'application/json'}
       }
       if (jwt) options.headers.Authorization = `Bearer ${jwt}`
