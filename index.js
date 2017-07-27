@@ -35,6 +35,7 @@ let timeout = ms('1m')
 // Exports
 module.exports = (opts = {}) => {
   opts.port = opts.port || 443
+  let basePath = opts.basePath ? `/${opts.basePath.replace(/^\//, '')}` : ''
   if (opts.host && opts.port !== 80 && opts.port !== 443) {
     opts.host = `${opts.host}:${opts.port}`
   }
@@ -53,7 +54,7 @@ module.exports = (opts = {}) => {
       if (!actions[action]) return reject(new Error('Action not SCRUD-y'))
       let [method, path] = actions[action](id, body)
       let protocol = opts.port === 443 ? 'https:' : 'http:'
-      let reqPath = `${opts.basePath || ''}/${api.toLowerCase()}${(path || '')}`
+      let reqPath = `${basePath}/${api.toLowerCase()}${(path || '')}`
       let options = {
         url: `${protocol}//${opts.host}${reqPath}`,
         method,

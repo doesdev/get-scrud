@@ -17,6 +17,7 @@ $ npm install --save get-scrud
 - **opts** *[object - required]*
   - **host** *[string - required]* (ex. `'jsonplaceholder.typicode.com'`)
   - **port** *[integer - optional - default: 443]* (ex. `80`)
+  - **basePath** *[string - optional - default: null]* (ex. `'api'` or `'/api'`)
   - **timeout** *[string | integer - optional - default: '1m' / 60000]* (ex. `'3m'`)
   - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
 
