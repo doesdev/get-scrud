@@ -34,28 +34,28 @@ let timeout = ms('1m')
 
 // Exports
 module.exports = (opts = {}) => {
-  return (api, action, id, body, jwt) => {
-    let runner = (a, b, c, d, e) => {
-      return go(a || api, b || action, c || id, d || body, e || jwt)
-    }
-    if (!opts.beforeSend) return runner()
-    return opts.beforeSend(api, action, id, body, jwt).then(runner)
+  opts.port = opts.port || 443
+  if (opts.host && opts.port !== 80 && opts.port !== 443) {
+    opts.host = `${opts.host}:${opts.port}`
   }
-
-  function go (api, action, id, body, jwt) {
+  return (api, action, id, body, jwt) => {
     return new Promise((resolve, reject) => {
-      if (!Number.isInteger(id) && typeof id === 'object') {
+      if (!Number.isInteger(id)) {
         jwt = body
         body = id
         id = null
       }
+      if (typeof body !== 'object') {
+        jwt = body
+        body = null
+      }
       jwt = jwt || opts.jwt
-      if (!actions[action]) return reject(new Error('Action not SCRUD-y'), 404)
+      if (!actions[action]) return reject(new Error('Action not SCRUD-y'))
       let [method, path] = actions[action](id, body)
       let protocol = opts.port === 443 ? 'https:' : 'http:'
       let reqPath = `${opts.basePath || ''}/${api.toLowerCase()}${(path || '')}`
       let options = {
-        url: `${protocol}//${opts.host}:${opts.port}/${reqPath}`,
+        url: `${protocol}//${opts.host}${reqPath}`,
         method,
         data: body,
         timeout: opts.timeout || timeout,
@@ -65,16 +65,16 @@ module.exports = (opts = {}) => {
 
       request(options).then((res) => {
         let out = res.data || {}
-        if (out.error) return reject(out.error, res.status)
-        return resolve(out.hasOwnProperty('data') ? out.data : out.toString(), res.status)
+        if (out.hasOwnProperty('error')) return reject(out.error)
+        out = out.hasOwnProperty('data') ? out.data : out
+        return resolve(out)
       }).catch((e) => {
         e = e || {}
         let res = e.response || {}
-        let serverErr = (res.data || {}).error
-        if (serverErr) return reject(serverErr, res.status || 500)
-        if (res.status === 401) return reject('Unauthorized', 401)
-        if (e.code === 'ECONNRESET') return reject('Request timeout', 408)
-        reject(e, res.status || 500)
+        if ((res.data || {}).error) return reject((res.data || {}).error)
+        if (res.status === 401) return reject('Unauthorized')
+        if (e.code === 'ECONNRESET') return reject('Request timeout')
+        return reject(e)
       })
     })
   }
