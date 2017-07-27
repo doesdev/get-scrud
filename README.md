@@ -1,4 +1,4 @@
-# get-scrud [![NPM version](https://badge.fury.io/js/get-scrud.svg)](https://npmjs.org/package/get-scrud)   [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
+# get-scrud [![NPM version](https://badge.fury.io/js/get-scrud.svg)](https://npmjs.org/package/get-scrud)   [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)   [![Dependency Status](https://dependencyci.com/github/doesdev/get-scrud/badge)](https://dependencyci.com/github/doesdev/get-scrud)
 
 > Client for SCRUD style rest APIs
 
