@@ -2,14 +2,9 @@
 
 // Setup
 const request = require('axios')
+const ms = require('pico-ms')
 
 // helpers
-const ms = (str) => {
-  let intvls = {s: 1000, m: 60000, h: 3600000}
-  let num = parseInt(str, 10)
-  let intvl = `${str}`.replace(`${num}`, '').trim().charAt(0)
-  return num * (intvls[intvl] || 1)
-}
 const bodyToQuery = (body) => {
   return Object.keys(body).map((k) => {
     let bodyRef = body[k]
