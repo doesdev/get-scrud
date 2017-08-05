@@ -3,6 +3,7 @@
 // setup
 import test from 'ava'
 import getScrud from './index'
+import http from 'http'
 const timeout = '30s'
 const baseOpts = {host: 'jsonplaceholder.typicode.com', port: 443, timeout}
 const apiCall = getScrud(baseOpts)
@@ -53,4 +54,26 @@ test(`JWT passed in call is not malformed / doesn't throw`, async (assert) => {
   await assert.notThrows(apiCall('posts', 'read', 1, jwt))
   await assert.notThrows(apiCall('posts', 'update', 1, {userId: 5}, jwt))
   await assert.notThrows(apiCall('posts', 'delete', 2, jwt))
+})
+
+test(`Can change options on an instance`, async (assert) => {
+  let handler = (req, res) => {
+    let data = req.headers.authorization.replace(/^Bearer\s/, '')
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.statusCode = 200
+    return res.end(JSON.stringify({data, error: null}))
+  }
+  let server = http.createServer(handler)
+  await new Promise((resolve, reject) => { server.listen(7236, resolve) })
+  let opts = {host: 'localhost', port: 7236, timeout, jwt}
+  let caller = getScrud(opts)
+  let initalJwt = await caller('whatevs', 'read', 1)
+  assert.is(initalJwt, jwt)
+  let localJwt = await caller('whatevs', 'read', 1, 'eff')
+  assert.is(localJwt, 'eff')
+  caller({jwt: 'this'})
+  let newJwt = await caller('whatevs', 'read', 1)
+  assert.is(newJwt, 'this')
+  localJwt = await caller('whatevs', 'read', 1, 'noise')
+  assert.is(localJwt, 'noise')
 })

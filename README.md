@@ -1,14 +1,14 @@
 # get-scrud [![NPM version](https://badge.fury.io/js/get-scrud.svg)](https://npmjs.org/package/get-scrud)   [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)   [![Dependency Status](https://dependencyci.com/github/doesdev/get-scrud/badge)](https://dependencyci.com/github/doesdev/get-scrud)
 
-> Client for SCRUD style rest APIs
+> Client for [SCRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) style rest APIs
 
-## install
+## Install
 
 ```sh
 $ npm install --save get-scrud
 ```
 
-## api
+## API
 
 #### Module ships single function which accepts options and returns main function
 
@@ -17,6 +17,7 @@ $ npm install --save get-scrud
 - **opts** *[object - required]*
   - **host** *[string - required]* (ex. `'jsonplaceholder.typicode.com'`)
   - **port** *[integer - optional - default: 443]* (ex. `80`)
+  - **protocol** *[string - optional - default is based on port]* (ex. `http`)
   - **basePath** *[string - optional - default: null]* (ex. `'api'` or `'/api'`)
   - **timeout** *[string | integer - optional - default: '1m' / 60000]* (ex. `'3m'`)
   - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
@@ -31,7 +32,18 @@ $ npm install --save get-scrud
 - **body** *[object - optional - default: null]* (ex. `{userId: 5}`)
 - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
 
-## usage
+
+#### Change options on an instance
+
+If you need to change any options on an existing instance, you can call the main
+function with a single argument, which is the new options you want to
+merge (Object.assign) with the original. That call will be synchronous.
+
+#### `apiCall(*opts)`
+
+- **opts** *[object - required]* (same as above)
+
+## Usage
 
 ```js
 const opts = {
@@ -74,6 +86,11 @@ async function callApis () {
 
 }
 ```
+
+## Related
+
+[scrud](https://github.com/doesdev/scrud) - Super opinionated, minimalistic, PG centric API fabric
+
 
 ## License
 
