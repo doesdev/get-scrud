@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "engines": {
@@ -25,10 +25,10 @@
   },
   "homepage": "https://github.com/doesdev/get-scrud#readme",
   "devDependencies": {
-    "ava": "^0.21.0"
+    "ava": "^0.22.0"
   },
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.17.0",
     "pico-ms": "^1.0.0"
   }
 }
