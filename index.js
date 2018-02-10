@@ -27,9 +27,11 @@ const actions = {
 
 // globals
 let defTimeout = ms('1m')
+let cached
 
 // Exports
 module.exports = (opts = {}) => {
+  if (opts.cache && cached) return cached
   let setOpts = (altOpts) => {
     opts.port = opts.port || 443
     opts.timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout
@@ -84,5 +86,6 @@ module.exports = (opts = {}) => {
   actionList.forEach((a) => {
     getScrud[a] = (api, id, body, jwt) => getScrud(api, a, id, body, jwt)
   })
+  if (opts.cache) cached = getScrud
   return getScrud
 }

@@ -4,8 +4,9 @@
 import test from 'ava'
 import getScrud from './index'
 import http from 'http'
+const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
-const baseOpts = {host: 'jsonplaceholder.typicode.com', port: 443, timeout}
+const baseOpts = {host, port: 443, cache: true, timeout}
 const apiCall = getScrud(baseOpts)
 const jwt = 'abbc123'
 
@@ -105,4 +106,19 @@ test(`Can change options on an instance`, async (assert) => {
   assert.is(newJwt, 'this')
   localJwt = await caller('whatevs', 'read', 1, 'noise')
   assert.is(localJwt, 'noise')
+})
+
+test(`Can cache instance, use uncached`, async (assert) => {
+  let handler = (req, res) => {
+    let data = req.headers.authorization.replace(/^Bearer\s/, '')
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.statusCode = 200
+    return res.end(JSON.stringify({data, error: null}))
+  }
+  let server = http.createServer(handler)
+  await new Promise((resolve, reject) => { server.listen(7237, resolve) })
+  let opts = {host: 'localhost', port: 7237, timeout, jwt, cache: true}
+  await assert.throws(getScrud(opts)('whatevs', 'read', 1))
+  delete opts.cache
+  await assert.notThrows(getScrud(opts)('whatevs', 'read', 1))
 })

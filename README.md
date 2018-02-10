@@ -21,6 +21,7 @@ $ npm install --save get-scrud
   - **basePath** *[string - optional - default: null]* (ex. `'api'` or `'/api'`)
   - **timeout** *[string | integer - optional - default: '1m' / 60000]* (ex. `'3m'`)
   - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
+  - **cache** *[boolean - optional - default: false]* use cached instance instead of a fresh one on each invocation of top-level exported function
 
 #### Main function returns `Promise` that resolves with JSON parsed response data
 
