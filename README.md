@@ -32,6 +32,14 @@ $ npm install --save get-scrud
 - **body** *[object - optional - default: null]* (ex. `{userId: 5}`)
 - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
 
+#### Alternatively address each action with `apiCall[action](...)`
+
+#### `apiCall.[search, create, read, update, delete](*resource, [*id, *body, *jwt])`
+
+- **resource** *[string - required]* (ex. `'posts'`)
+- **id** *[integer - optional - default: null]* (ex. `1`)
+- **body** *[object - optional - default: null]* (ex. `{userId: 5}`)
+- **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
 
 #### Change options on an instance
 

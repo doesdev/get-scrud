@@ -38,6 +38,35 @@ test('DELETE', async (assert) => {
   await assert.notThrows(apiCall('posts', 'delete', 2))
 })
 
+test('apiCall.search', async (assert) => {
+  let data = await apiCall.search('posts', {})
+  assert.truthy(Array.isArray(data))
+})
+
+test('apiCall.create', async (assert) => {
+  let body = {
+    userId: 1,
+    title: `get scrud yo`,
+    body: `test scrud api-age`
+  }
+  let data = await apiCall.create('posts', body)
+  assert.is(data.userId, 1)
+})
+
+test('apiCall.read', async (assert) => {
+  let data = await apiCall.read('posts', 1)
+  assert.is(data.id, 1)
+})
+
+test('apiCall.update', async (assert) => {
+  let data = await apiCall.update('posts', 1, {userId: 5})
+  assert.is(data.userId, 5)
+})
+
+test('apiCall.delete', async (assert) => {
+  await assert.notThrows(apiCall.delete('posts', 2))
+})
+
 test(`JWT passed in init is not malformed / doesn't throw`, async (assert) => {
   let apiCallJwtInit = getScrud(Object.assign({jwt}, baseOpts))
   await assert.notThrows(apiCallJwtInit('posts', 'read', 1))

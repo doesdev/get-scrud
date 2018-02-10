@@ -3,6 +3,7 @@
 // Setup
 const request = require('axios')
 const ms = require('pico-ms')
+const actionList = ['search', 'create', 'read', 'update', 'delete']
 
 // helpers
 const bodyToQuery = (body) => {
@@ -39,7 +40,7 @@ module.exports = (opts = {}) => {
     if (altOpts) Object.assign(opts, altOpts)
   }
   setOpts()
-  return (api, action, id, body, jwt) => {
+  let getScrud = (api, action, id, body, jwt) => {
     if (api && typeof api === 'object') return setOpts(api)
     return new Promise((resolve, reject) => {
       if (!Number.isInteger(id)) {
@@ -74,10 +75,14 @@ module.exports = (opts = {}) => {
         e = e || {}
         let res = e.response || {}
         if ((res.data || {}).error) return reject((res.data || {}).error)
-        if (res.status === 401) return reject('Unauthorized')
-        if (e.code === 'ECONNRESET') return reject('Request timeout')
+        if (res.status === 401) return reject(new Error('Unauthorized'))
+        if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
         return reject(e)
       })
     })
   }
+  actionList.forEach((a) => {
+    getScrud[a] = (api, id, body, jwt) => getScrud(api, a, id, body, jwt)
+  })
+  return getScrud
 }
