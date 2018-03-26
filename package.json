@@ -1,13 +1,19 @@
 {
   "name": "get-scrud",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
+  "module": "module.js",
+  "files": [
+    "index.js",
+    "module.js"
+  ],
   "engines": {
     "node": ">=6.0.0"
   },
   "scripts": {
-    "test": "ava --verbose"
+    "test": "rollup -c && ava --verbose",
+    "precommit": "rollup -c && git add index.js module.js"
   },
   "repository": {
     "type": "git",
@@ -24,11 +30,15 @@
     "url": "https://github.com/doesdev/get-scrud/issues"
   },
   "homepage": "https://github.com/doesdev/get-scrud#readme",
-  "devDependencies": {
-    "ava": "^0.25.0"
-  },
   "dependencies": {
-    "axios": "^0.17.1",
+    "axios": "^0.18.0",
     "pico-ms": "^1.0.0"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "husky": "^0.14.3",
+    "rollup": "^0.57.1",
+    "rollup-plugin-babel": "^3.0.3",
+    "babel-preset-env": "^1.6.1"
   }
 }

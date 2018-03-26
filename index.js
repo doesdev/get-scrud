@@ -1,6 +1,5 @@
 'use strict'
 
-// Setup
 const request = require('axios')
 const ms = require('pico-ms')
 const actionList = ['search', 'create', 'read', 'update', 'delete']
@@ -29,7 +28,7 @@ const actions = {
 let defTimeout = ms('1m')
 let cached
 
-// Exports
+// main
 module.exports = (opts = {}) => {
   if (opts.cache && cached) return cached
   let setOpts = (altOpts) => {
