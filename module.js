@@ -7,7 +7,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var actionList = ['search', 'create', 'read', 'update', 'delete'];
 
 // helpers
-var bodyToQuery = function bodyToQuery(body) {
+var bodyToQuery = function bodyToQuery() {
+  var body = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
   return Object.keys(body).map(function (k) {
     var bodyRef = body[k];
     var isAry = Array.isArray(bodyRef);

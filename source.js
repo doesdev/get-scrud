@@ -5,7 +5,7 @@ import ms from 'pico-ms'
 const actionList = ['search', 'create', 'read', 'update', 'delete']
 
 // helpers
-const bodyToQuery = (body) => {
+const bodyToQuery = (body = {}) => {
   return Object.keys(body).map((k) => {
     let bodyRef = body[k]
     let isAry = Array.isArray(bodyRef)
