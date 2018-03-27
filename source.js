@@ -44,7 +44,7 @@ export default (opts = {}) => {
   let getScrud = (api, action, id, body, jwt) => {
     if (api && typeof api === 'object') return setOpts(api)
     return new Promise((resolve, reject) => {
-      if (!Number.isInteger(id)) {
+      if (!Number.isInteger(id) && typeof id !== 'string') {
         jwt = body
         body = id
         id = null

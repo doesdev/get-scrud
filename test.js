@@ -4,6 +4,7 @@
 import test from 'ava'
 import getScrud from './index'
 import http from 'http'
+import scrud from 'scrud'
 const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
 const baseOpts = {host, port: 443, cache: true, timeout}
@@ -121,4 +122,17 @@ test(`Can cache instance, use uncached`, async (assert) => {
   await assert.throws(getScrud(opts)('whatevs', 'read', 1))
   delete opts.cache
   await assert.notThrows(getScrud(opts)('whatevs', 'read', 1))
+})
+
+test(`string resourceId doesn't throw`, async (assert) => {
+  let resource = 'someresource'
+  let port = 7942
+  let read = (req, res) => scrud.sendData(res, {id: req.id})
+  await scrud.register(resource, {read})
+  await scrud.start({port})
+  let opts = {host: 'localhost', port, timeout, jwt}
+  let caller = getScrud(opts)
+  let id = 'SOMEIDSTRING'
+  let data = await caller.read(resource, id)
+  assert.is(data.id, id)
 })
