@@ -35,7 +35,9 @@ export default (opts = {}) => {
     opts.port = opts.port || 443
     opts.timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout
     opts.basePath = opts.basePath ? `/${opts.basePath.replace(/^\//, '')}` : ''
-    if (opts.host && opts.port !== 80 && opts.port !== 443) {
+    let altPort = opts.host && opts.port !== 80 && opts.port !== 443
+    // if (altPort && opts.host.indexOf(`:${opts.port}`) === -1) {
+    if (altPort) {
       opts.host = `${opts.host}:${opts.port}`
     }
     if (altOpts) Object.assign(opts, altOpts)
