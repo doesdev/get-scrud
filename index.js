@@ -152,7 +152,7 @@ var source = (function () {
       }).catch(function (e) {
         e = e || {};
         var res = e.response || {};
-        if ((res.data || {}).error) return reject((res.data || {}).error);
+        if ((res.data || {}).error) return reject(new Error(res.data.error));
         if (res.status === 401) return reject(new Error('Unauthorized'));
         if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'));
         return reject(e);
