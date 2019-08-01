@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "module": "module.js",
@@ -12,8 +12,8 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "test": "rollup -c && node test.js --verbose",
-    "precommit": "rollup -c && git add index.js module.js"
+    "test": "rollup -c && mvt --verbose",
+    "precommit": "rollup -c && mvt && git add index.js module.js"
   },
   "repository": {
     "type": "git",
@@ -35,13 +35,13 @@
     "pico-ms": "^1.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.5",
+    "@babel/core": "^7.5.5",
     "@babel/polyfill": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "husky": "^2.3.0",
-    "mvt": "^3.0.0",
-    "rollup": "^1.13.1",
-    "rollup-plugin-babel": "^4.3.2",
-    "scrud": "^6.0.1"
+    "@babel/preset-env": "^7.5.5",
+    "husky": "^3.0.2",
+    "mvt": "^4.0.0",
+    "rollup": "^1.17.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "scrud": "^6.0.3"
   }
 }

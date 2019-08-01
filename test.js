@@ -1,164 +1,159 @@
 'use strict'
 
 require('@babel/polyfill')
-const { runTests, testAsync, test } = require('mvt')
+
+const test = require('mvt')
 const getScrud = require('./index')
 const http = require('http')
 const scrud = require('scrud')
+
 const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
 const baseOpts = { host, port: 443, cache: true, timeout }
 const apiCall = getScrud(baseOpts)
 const jwt = 'abbc123'
 
-runTests(`Testing my app`, async () => {
-  await testAsync('SEARCH', async () => {
-    let data = await apiCall('posts', 'search', {})
-    return Array.isArray(data)
-  })
+test('SEARCH', async (assert) => {
+  const data = await apiCall('posts', 'search', {})
+  assert.truthy(Array.isArray(data))
+})
 
-  await testAsync('CREATE', async () => {
-    let body = {
-      userId: 1,
-      title: `get scrud yo`,
-      body: `test scrud api-age`
-    }
-    let data = await apiCall('posts', 'create', body)
-    return data.userId === 1
-  })
+test('CREATE', async (assert) => {
+  const body = {
+    userId: 1,
+    title: `get scrud yo`,
+    body: `test scrud api-age`
+  }
+  const data = await apiCall('posts', 'create', body)
+  assert.is(data.userId, 1)
+})
 
-  await testAsync('READ', async () => {
-    let data = await apiCall('posts', 'read', 1)
-    return data.id === 1
-  })
+test('READ', async (assert) => {
+  const data = await apiCall('posts', 'read', 1)
+  assert.is(data.id, 1)
+})
 
-  await testAsync('UPDATE', async () => {
-    let data = await apiCall('posts', 'update', 1, { userId: 5 })
-    return data.userId === 5
-  })
+test('UPDATE', async (assert) => {
+  const data = await apiCall('posts', 'update', 1, { userId: 5 })
+  assert.is(data.userId, 5)
+})
 
-  await testAsync('DELETE', async () => {
-    await apiCall('posts', 'delete', 2)
-    return true
-  })
+test('DELETE', async (assert) => {
+  await assert.notThrowsAsync(() => apiCall('posts', 'delete', 2))
+})
 
-  await testAsync('apiCall.search', async () => {
-    let data = await apiCall.search('posts', {})
-    return Array.isArray(data)
-  })
+test('apiCall.search', async (assert) => {
+  const data = await apiCall.search('posts', {})
+  assert.truthy(Array.isArray(data))
+})
 
-  await testAsync('apiCall.create', async () => {
-    let body = {
-      userId: 1,
-      title: `get scrud yo`,
-      body: `test scrud api-age`
-    }
-    let data = await apiCall.create('posts', body)
-    return data.userId === 1
-  })
+test('apiCall.create', async (assert) => {
+  const body = {
+    userId: 1,
+    title: `get scrud yo`,
+    body: `test scrud api-age`
+  }
+  const data = await apiCall.create('posts', body)
+  assert.is(data.userId, 1)
+})
 
-  await testAsync('apiCall.read', async () => {
-    let data = await apiCall.read('posts', 1)
-    return data.id === 1
-  })
+test('apiCall.read', async (assert) => {
+  const data = await apiCall.read('posts', 1)
+  assert.is(data.id, 1)
+})
 
-  await testAsync('apiCall.update', async () => {
-    let data = await apiCall.update('posts', 1, { userId: 5 })
-    return data.userId === 5
-  })
+test('apiCall.update', async (assert) => {
+  const data = await apiCall.update('posts', 1, { userId: 5 })
+  assert.is(data.userId, 5)
+})
 
-  await testAsync('apiCall.delete', async () => {
-    await apiCall.delete('posts', 2)
-    return true
-  })
+test('apiCall.delete', async (assert) => {
+  await assert.notThrowsAsync(() => apiCall.delete('posts', 2))
+})
 
-  await testAsync(`JWT passed in init is not malformed / doesn't throw`, async () => {
-    let apiCallJwtInit = getScrud(Object.assign({ jwt }, baseOpts))
-    await apiCallJwtInit('posts', 'read', 1)
-    return true
-  })
+test(`JWT passed in init is not malformed / doesn't throw`, async (assert) => {
+  const apiCallJwtInit = getScrud(Object.assign({ jwt }, baseOpts))
+  await assert.notThrowsAsync(() => apiCallJwtInit('posts', 'read', 1))
+})
 
-  await testAsync(`JWT passed in call is not malformed / doesn't throw`, async () => {
-    let body = {
-      userId: 1,
-      title: `get scrud yo`,
-      body: `test scrud api-age`
-    }
-    await apiCall('posts', 'search', {}, jwt)
-    await apiCall('posts', 'create', body, jwt)
-    await apiCall('posts', 'read', 1, jwt)
-    await apiCall('posts', 'update', 1, { userId: 5 }, jwt)
-    await apiCall('posts', 'delete', 2, jwt)
+test(`JWT passed in call is not malformed / doesn't throw`, async (assert) => {
+  const body = {
+    userId: 1,
+    title: `get scrud yo`,
+    body: `test scrud api-age`
+  }
 
-    return true
-  })
+  await assert.notThrowsAsync(() => apiCall('posts', 'search', {}, jwt))
+  await assert.notThrowsAsync(() => apiCall('posts', 'create', body, jwt))
+  await assert.notThrowsAsync(() => apiCall('posts', 'read', 1, jwt))
+  await assert.notThrowsAsync(() => apiCall('posts', 'update', 1, { userId: 5 }, jwt))
+  await assert.notThrowsAsync(() => apiCall('posts', 'delete', 2, jwt))
+})
 
-  await testAsync(`Can change options on an instance`, async () => {
-    let handler = (req, res) => {
-      let data = req.headers.authorization.replace(/^Bearer\s/, '')
-      res.setHeader('Content-Type', 'application/json; charset=utf-8')
-      res.statusCode = 200
-      return res.end(JSON.stringify({ data, error: null }))
-    }
-    let server = http.createServer(handler)
-    await new Promise((resolve, reject) => { server.listen(7236, resolve) })
+test(`Can change options on an instance`, async (assert) => {
+  const handler = (req, res) => {
+    const data = req.headers.authorization.replace(/^Bearer\s/, '')
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.statusCode = 200
+    return res.end(JSON.stringify({ data, error: null }))
+  }
 
-    let opts = { host: 'localhost', port: 7236, timeout, jwt }
-    let caller = getScrud(opts)
-    let initalJwt = await caller('whatevs', 'read', 1)
+  const server = http.createServer(handler)
+  await new Promise((resolve, reject) => { server.listen(7236, resolve) })
 
-    test('initialJwt matches jwt', initalJwt, jwt)
+  const opts = { host: 'localhost', port: 7236, timeout, jwt }
+  const caller = getScrud(opts)
+  const initalJwt = await caller('whatevs', 'read', 1)
 
-    let localJwt = await caller('whatevs', 'read', 1, 'eff')
-    test(`localJwt equals 'eff'`, localJwt, 'eff')
+  assert.is(initalJwt, jwt)
 
-    caller({ jwt: 'this' })
-    let newJwt = await caller('whatevs', 'read', 1)
-    test(`newJwt equals 'this'`, newJwt, 'this')
+  let localJwt = await caller('whatevs', 'read', 1, 'eff')
 
-    localJwt = await caller('whatevs', 'read', 1, 'noise')
-    return test(`localJwt equals 'noise'`, localJwt, 'noise')
-  })
+  assert.is(localJwt, 'eff')
 
-  await testAsync(`Can cache instance, use uncached`, async () => {
-    let handler = (req, res) => {
-      let data = req.headers.authorization.replace(/^Bearer\s/, '')
-      res.setHeader('Content-Type', 'application/json; charset=utf-8')
-      res.statusCode = 200
-      return res.end(JSON.stringify({ data, error: null }))
-    }
-    let server = http.createServer(handler)
-    await new Promise((resolve, reject) => { server.listen(7237, resolve) })
+  caller({ jwt: 'this' })
 
-    let opts = { host: 'localhost', port: 7237, timeout, jwt, cache: true }
+  const newJwt = await caller('whatevs', 'read', 1)
 
-    let error
-    try {
-      await getScrud(opts)('whatevs', 'read', 1)
-    } catch (ex) {
-      error = ex
-    }
+  assert.is(newJwt, 'this')
 
-    delete opts.cache
+  localJwt = await caller('whatevs', 'read', 1, 'noise')
 
-    await getScrud(opts)('whatevs', 'read', 1)
+  assert.is(localJwt, 'noise')
+})
 
-    return !!error
-  })
+test(`Can cache instance, use uncached`, async (assert) => {
+  const handler = (req, res) => {
+    const data = req.headers.authorization.replace(/^Bearer\s/, '')
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.statusCode = 200
+    return res.end(JSON.stringify({ data, error: null }))
+  }
 
-  await testAsync(`string resourceId doesn't throw`, async () => {
-    let resource = 'someresource'
-    let port = 7942
-    let read = (req, res) => scrud.sendData(res, { id: req.id })
+  const server = http.createServer(handler)
+  await new Promise((resolve, reject) => { server.listen(7237, resolve) })
 
-    await scrud.register(resource, { read })
-    await scrud.start({ port })
+  const opts = { host: 'localhost', port: 7237, timeout, jwt, cache: true }
 
-    let opts = { host: 'localhost', port, timeout, jwt }
-    let caller = getScrud(opts)
-    let id = 'SOMEIDSTRING'
-    let data = await caller.read(resource, id)
+  await assert.throwsAsync(() => getScrud(opts)('whatevs', 'read', 1))
 
-    return data.id === id
-  })
+  delete opts.cache
+
+  await assert.notThrowsAsync(() => getScrud(opts)('whatevs', 'read', 1))
+})
+
+test(`string resourceId doesn't throw`, async (assert) => {
+  const resource = 'someresource'
+  const port = 7942
+  const read = (req, res) => scrud.sendData(res, { id: req.id })
+
+  await scrud.register(resource, { read })
+  await scrud.start({ port })
+
+  const opts = { host: 'localhost', port, timeout, jwt }
+  const caller = getScrud(opts)
+  const id = 'SOMEIDSTRING'
+  const data = await caller.read(resource, id)
+
+  assert.is(data.id, id)
 })

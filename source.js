@@ -24,7 +24,7 @@ const actions = {
   delete: (id, body) => ['DELETE', `/${id}`]
 }
 
-let defTimeout = ms('1m')
+const defTimeout = ms('1m')
 let cached
 
 export default (opts = {}) => {
