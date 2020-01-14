@@ -14,8 +14,9 @@ const apiCall = getScrud(baseOpts)
 const jwt = 'abbc123'
 
 test('SEARCH', async (assert) => {
-  const data = await apiCall('posts', 'search', {})
+  const data = await apiCall('posts', 'search', { userId: 5 })
   assert.truthy(Array.isArray(data))
+  assert.is(data[0].userId, 5)
 })
 
 test('CREATE', async (assert) => {
@@ -43,8 +44,9 @@ test('DELETE', async (assert) => {
 })
 
 test('apiCall.search', async (assert) => {
-  const data = await apiCall.search('posts', {})
+  const data = await apiCall.search('posts', { userId: 5 })
   assert.truthy(Array.isArray(data))
+  assert.is(data[0].userId, 5)
 })
 
 test('apiCall.create', async (assert) => {

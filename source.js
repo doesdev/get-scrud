@@ -2,34 +2,21 @@
 
 import request from 'superagent'
 import ms from 'pico-ms'
-const actionList = ['search', 'create', 'read', 'update', 'delete']
+const defTimeout = ms('1m')
+
+const actions = {
+  search: { method: 'GET', hasBody: false, getPath: (id) => '' },
+  create: { method: 'POST', hasBody: true, getPath: (id) => '' },
+  read: { method: 'GET', hasBody: false, getPath: (id) => `/${id}` },
+  update: { method: 'PUT', hasBody: true, getPath: (id) => `/${id}` },
+  delete: { method: 'DELETE', hasBody: false, getPath: (id) => `/${id}` }
+}
+
+let cached
 
 const hasOwnProperty = (obj, prop) => {
   return Object.prototype.hasOwnProperty.call(obj, prop)
 }
-
-const bodyToQuery = (body = {}) => {
-  return Object.keys(body).map((k) => {
-    const bodyRef = body[k]
-    const isAry = Array.isArray(bodyRef)
-    if (isAry) k = k.replace(/\[]$/, '')
-    const uK = encodeURIComponent(k)
-    return isAry
-      ? bodyRef.map((v) => `${uK}[]=${encodeURIComponent(v)}`).join('&')
-      : `${uK}=${encodeURIComponent(bodyRef)}`
-  }).join('&')
-}
-
-const actions = {
-  search: (id, body) => ['GET', `?${bodyToQuery(body)}`],
-  create: (id, body) => ['POST', null],
-  read: (id, body) => ['GET', `/${id}${body ? `?${bodyToQuery(body)}` : ''}`],
-  update: (id, body) => ['PUT', `/${id}`],
-  delete: (id, body) => ['DELETE', `/${id}`]
-}
-
-const defTimeout = ms('1m')
-let cached
 
 export default (opts = {}) => {
   if (opts.cache && cached) return cached
@@ -62,18 +49,25 @@ export default (opts = {}) => {
       }
       jwt = jwt || opts.jwt
 
-      if (!actions[action]) return reject(new Error('Action not SCRUD-y'))
+      const { method, hasBody, getPath } = actions[action]
 
-      const [method, path] = actions[action](id, body)
+      if (!method) return reject(new Error('Action not SCRUD-y'))
+
       const protocol = opts.protocol || (opts.port === 443 ? 'https' : 'http')
-      const reqPath = `${opts.basePath}/${api.toLowerCase()}${(path || '')}`
+      const reqPath = `${opts.basePath}/${api.toLowerCase()}${getPath(id)}`
       const url = `${protocol}://${opts.host}${reqPath}`
 
       const req = request(method, url)
       req.set('Content-Type', 'application/json')
 
-      if (body) req.send(body)
+      if (hasBody) {
+        req.send(body || '')
+      } else {
+        req.query(body || {})
+      }
+
       if (jwt) req.set('Authorization', `Bearer ${jwt}`)
+
       if (opts.timeout) req.timeout(opts.timeout)
 
       req.then((res) => {
@@ -92,7 +86,7 @@ export default (opts = {}) => {
     })
   }
 
-  actionList.forEach((a) => {
+  Object.keys(actions).forEach((a) => {
     getScrud[a] = (api, id, body, jwt) => getScrud(api, a, id, body, jwt)
   })
 
