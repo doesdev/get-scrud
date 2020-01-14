@@ -1,4 +1,4 @@
-import request from 'axios';
+import request from 'superagent';
 import ms from 'pico-ms';
 
 function _typeof(obj) {
@@ -58,6 +58,10 @@ function _nonIterableRest() {
 }
 
 var actionList = ['search', 'create', 'read', 'update', 'delete'];
+
+var hasOwnProperty = function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+};
 
 var bodyToQuery = function bodyToQuery() {
   var body = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -134,25 +138,21 @@ var source = (function () {
 
       var protocol = opts.protocol || (opts.port === 443 ? 'https' : 'http');
       var reqPath = "".concat(opts.basePath, "/").concat(api.toLowerCase()).concat(path || '');
-      var options = {
-        url: "".concat(protocol, "://").concat(opts.host).concat(reqPath),
-        method: method,
-        data: body,
-        timeout: opts.timeout,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-      if (jwt) options.headers.Authorization = "Bearer ".concat(jwt);
-      request(options).then(function (res) {
-        var out = res.data || {};
+      var url = "".concat(protocol, "://").concat(opts.host).concat(reqPath);
+      var req = request(method, url);
+      req.set('Content-Type', 'application/json');
+      if (body) req.send(body);
+      if (jwt) req.set('Authorization', "Bearer ".concat(jwt));
+      if (opts.timeout) req.timeout(opts.timeout);
+      req.then(function (res) {
+        var out = res.body || {};
         if (out.error) return reject(out.error);
-        out = out.hasOwnProperty('data') ? out.data : out;
+        out = hasOwnProperty(out, 'data') ? out.data : out;
         return resolve(out);
       }).catch(function (e) {
         e = e || {};
         var res = e.response || {};
-        if ((res.data || {}).error) return reject(new Error(res.data.error));
+        if ((res.body || {}).error) return reject(new Error(res.data.error));
         if (res.status === 401) return reject(new Error('Unauthorized'));
         if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'));
         return reject(e);

@@ -1,8 +1,12 @@
 'use strict'
 
-import request from 'axios'
+import request from 'superagent'
 import ms from 'pico-ms'
 const actionList = ['search', 'create', 'read', 'update', 'delete']
+
+const hasOwnProperty = (obj, prop) => {
+  return Object.prototype.hasOwnProperty.call(obj, prop)
+}
 
 const bodyToQuery = (body = {}) => {
   return Object.keys(body).map((k) => {
@@ -63,24 +67,24 @@ export default (opts = {}) => {
       const [method, path] = actions[action](id, body)
       const protocol = opts.protocol || (opts.port === 443 ? 'https' : 'http')
       const reqPath = `${opts.basePath}/${api.toLowerCase()}${(path || '')}`
-      const options = {
-        url: `${protocol}://${opts.host}${reqPath}`,
-        method,
-        data: body,
-        timeout: opts.timeout,
-        headers: { 'Content-Type': 'application/json' }
-      }
-      if (jwt) options.headers.Authorization = `Bearer ${jwt}`
+      const url = `${protocol}://${opts.host}${reqPath}`
 
-      request(options).then((res) => {
-        let out = res.data || {}
+      const req = request(method, url)
+      req.set('Content-Type', 'application/json')
+
+      if (body) req.send(body)
+      if (jwt) req.set('Authorization', `Bearer ${jwt}`)
+      if (opts.timeout) req.timeout(opts.timeout)
+
+      req.then((res) => {
+        let out = res.body || {}
         if (out.error) return reject(out.error)
-        out = out.hasOwnProperty('data') ? out.data : out
+        out = hasOwnProperty(out, 'data') ? out.data : out
         return resolve(out)
       }).catch((e) => {
         e = e || {}
         const res = e.response || {}
-        if ((res.data || {}).error) return reject(new Error(res.data.error))
+        if ((res.body || {}).error) return reject(new Error(res.data.error))
         if (res.status === 401) return reject(new Error('Unauthorized'))
         if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
         return reject(e)

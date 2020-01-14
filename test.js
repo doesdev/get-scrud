@@ -21,8 +21,8 @@ test('SEARCH', async (assert) => {
 test('CREATE', async (assert) => {
   const body = {
     userId: 1,
-    title: `get scrud yo`,
-    body: `test scrud api-age`
+    title: 'get scrud yo',
+    body: 'test scrud api-age'
   }
   const data = await apiCall('posts', 'create', body)
   assert.is(data.userId, 1)
@@ -50,8 +50,8 @@ test('apiCall.search', async (assert) => {
 test('apiCall.create', async (assert) => {
   const body = {
     userId: 1,
-    title: `get scrud yo`,
-    body: `test scrud api-age`
+    title: 'get scrud yo',
+    body: 'test scrud api-age'
   }
   const data = await apiCall.create('posts', body)
   assert.is(data.userId, 1)
@@ -71,16 +71,16 @@ test('apiCall.delete', async (assert) => {
   await assert.notThrowsAsync(() => apiCall.delete('posts', 2))
 })
 
-test(`JWT passed in init is not malformed / doesn't throw`, async (assert) => {
+test('JWT passed in init is not malformed / doesn\'t throw', async (assert) => {
   const apiCallJwtInit = getScrud(Object.assign({ jwt }, baseOpts))
   await assert.notThrowsAsync(() => apiCallJwtInit('posts', 'read', 1))
 })
 
-test(`JWT passed in call is not malformed / doesn't throw`, async (assert) => {
+test('JWT passed in call is not malformed / doesn\'t throw', async (assert) => {
   const body = {
     userId: 1,
-    title: `get scrud yo`,
-    body: `test scrud api-age`
+    title: 'get scrud yo',
+    body: 'test scrud api-age'
   }
 
   await assert.notThrowsAsync(() => apiCall('posts', 'search', {}, jwt))
@@ -90,7 +90,7 @@ test(`JWT passed in call is not malformed / doesn't throw`, async (assert) => {
   await assert.notThrowsAsync(() => apiCall('posts', 'delete', 2, jwt))
 })
 
-test(`Can change options on an instance`, async (assert) => {
+test('Can change options on an instance', async (assert) => {
   const handler = (req, res) => {
     const data = req.headers.authorization.replace(/^Bearer\s/, '')
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
@@ -122,7 +122,7 @@ test(`Can change options on an instance`, async (assert) => {
   assert.is(localJwt, 'noise')
 })
 
-test(`Can cache instance, use uncached`, async (assert) => {
+test('Can cache instance, use uncached', async (assert) => {
   const handler = (req, res) => {
     const data = req.headers.authorization.replace(/^Bearer\s/, '')
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
@@ -142,7 +142,7 @@ test(`Can cache instance, use uncached`, async (assert) => {
   await assert.notThrowsAsync(() => getScrud(opts)('whatevs', 'read', 1))
 })
 
-test(`string resourceId doesn't throw`, async (assert) => {
+test('string resourceId doesn\'t throw', async (assert) => {
   const resource = 'someresource'
   const port = 7942
   const read = (req, res) => scrud.sendData(res, { id: req.id })
