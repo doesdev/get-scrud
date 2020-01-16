@@ -159,3 +159,22 @@ test('string resourceId doesn\'t throw', async (assert) => {
 
   assert.is(data.id, id)
 })
+
+test.only('opts.hook works', async (assert) => {
+  const caller = getScrud(Object.assign({}, baseOpts, { hook: () => true }))
+
+  const data = await caller.read('posts', 1)
+  assert.is(data.id, 1)
+
+  caller(Object.assign({}, baseOpts, { hook: () => false }))
+
+  assert.throwsAsync(() => caller.read('posts', 1))
+
+  caller(Object.assign({}, baseOpts, { hook: () => new Error('Fail') }))
+
+  assert.throwsAsync(() => caller.read('posts', 1))
+
+  caller(Object.assign({}, baseOpts, { hook: false }))
+
+  assert.notThrowsAsync(() => caller.read('posts', 1))
+})

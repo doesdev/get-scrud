@@ -22,6 +22,12 @@ $ npm install --save get-scrud
   - **timeout** *[string | integer - optional - default: '1m' / 60000]* (ex. `'3m'`)
   - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
   - **cache** *[boolean - optional - default: false]* use cached instance instead of a fresh one on each invocation of top-level exported function
+  - **hook** *[function - optional - default: null]*
+    - called before request is executed
+    - must return (non-`Error`) truthy value to proceed with request
+    - if return value is falsy OR `instanceof Error` it will throw
+    - must be synchronous
+    - receives all args passed to `apiCall`  
 
 #### Main function returns `Promise` that resolves with JSON parsed response data
 

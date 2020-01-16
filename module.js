@@ -16,6 +16,7 @@ function _typeof(obj) {
 }
 
 var defTimeout = ms('1m');
+var hookErr = new Error('Request hook return falsy value, cancelling requst');
 var actions = {
   search: {
     method: 'GET',
@@ -80,6 +81,12 @@ var source = (function () {
 
   var getScrud = function getScrud(api, action, id, body, jwt) {
     if (api && _typeof(api) === 'object') return setOpts(api);
+
+    if (typeof opts.hook === 'function') {
+      var err = opts.hook(api, action, id, body, jwt || opts.jwt);
+      if (!err || err instanceof Error) throw err || hookErr;
+    }
+
     return new Promise(function (resolve, reject) {
       if (!Number.isInteger(id) && typeof id !== 'string') {
         jwt = body;

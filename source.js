@@ -2,7 +2,9 @@
 
 import request from 'superagent'
 import ms from 'pico-ms'
+
 const defTimeout = ms('1m')
+const hookErr = new Error('Request hook return falsy value, cancelling requst')
 
 const actions = {
   search: { method: 'GET', hasBody: false, getPath: (id) => '' },
@@ -20,6 +22,7 @@ const hasOwnProperty = (obj, prop) => {
 
 export default (opts = {}) => {
   if (opts.cache && cached) return cached
+
   const setOpts = (altOpts) => {
     opts.port = opts.port || 443
     opts.timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout
@@ -36,6 +39,11 @@ export default (opts = {}) => {
 
   const getScrud = (api, action, id, body, jwt) => {
     if (api && typeof api === 'object') return setOpts(api)
+
+    if (typeof opts.hook === 'function') {
+      const err = opts.hook(api, action, id, body, jwt || opts.jwt)
+      if (!err || err instanceof Error) throw err || hookErr
+    }
 
     return new Promise((resolve, reject) => {
       if (!Number.isInteger(id) && typeof id !== 'string') {
