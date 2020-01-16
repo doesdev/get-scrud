@@ -160,7 +160,7 @@ test('string resourceId doesn\'t throw', async (assert) => {
   assert.is(data.id, id)
 })
 
-test.only('opts.hook works', async (assert) => {
+test('opts.hook works', async (assert) => {
   const caller = getScrud(Object.assign({}, baseOpts, { hook: () => true }))
 
   const data = await caller.read('posts', 1)
