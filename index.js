@@ -6,6 +6,8 @@ var request = _interopDefault(require('axios'));
 var ms = _interopDefault(require('pico-ms'));
 
 function _typeof(obj) {
+  "@babel/helpers - typeof";
+
   if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
     _typeof = function (obj) {
       return typeof obj;
