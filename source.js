@@ -75,7 +75,7 @@ export default (opts = {}) => {
       request(options).then((res) => {
         let out = res.data || {}
         if (out.error) return reject(out.error)
-        out = out.hasOwnProperty('data') ? out.data : out
+        out = 'data' in out ? out.data : out
         return resolve(out)
       }).catch((e) => {
         e = e || {}
