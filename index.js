@@ -1,9 +1,12 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+var request = require('axios');
+var ms = require('pico-ms');
 
-var request = _interopDefault(require('axios'));
-var ms = _interopDefault(require('pico-ms'));
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var request__default = /*#__PURE__*/_interopDefaultLegacy(request);
+var ms__default = /*#__PURE__*/_interopDefaultLegacy(ms);
 
 function _typeof(obj) {
   "@babel/helpers - typeof";
@@ -109,7 +112,7 @@ var actions = {
     return ['DELETE', "/".concat(id)];
   }
 };
-var defTimeout = ms('1m');
+var defTimeout = ms__default['default']('1m');
 var cached;
 var source = (function () {
   var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -117,7 +120,7 @@ var source = (function () {
 
   var setOpts = function setOpts(altOpts) {
     opts.port = opts.port || 443;
-    opts.timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout;
+    opts.timeout = (opts.timeout ? ms__default['default'](opts.timeout) : defTimeout) || defTimeout;
     opts.basePath = opts.basePath ? "/".concat(opts.basePath.replace(/^\//, '')) : '';
     var altPort = opts.host && opts.port !== 80 && opts.port !== 443;
 
@@ -164,7 +167,7 @@ var source = (function () {
         }
       };
       if (jwt) options.headers.Authorization = "Bearer ".concat(jwt);
-      request(options).then(function (res) {
+      request__default['default'](options).then(function (res) {
         var out = res.data || {};
         if (out.error) return reject(out.error);
         out = 'data' in out ? out.data : out;
