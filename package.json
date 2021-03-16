@@ -31,17 +31,17 @@
   },
   "homepage": "https://github.com/doesdev/get-scrud#readme",
   "dependencies": {
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "pico-ms": "^1.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.3",
+    "@babel/core": "^7.13.10",
     "@babel/polyfill": "^7.12.1",
-    "@babel/preset-env": "^7.12.1",
-    "husky": "^4.3.0",
+    "@babel/preset-env": "^7.13.10",
+    "husky": "^5.1.3",
     "mvt": "^4.1.1",
-    "rollup": "^2.32.1",
+    "rollup": "^2.41.3",
     "rollup-plugin-babel": "^4.4.0",
-    "scrud": "^7.0.3"
+    "scrud": "^7.1.0"
   }
 }
