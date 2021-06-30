@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### Unreleased
+
+> 2021-06-30
+
+- Update dev dependencies (rollup, babel)
+
 ### [1.5.2](https://github.com/doesdev/get-scrud/compare/1.5.1...1.5.2)
 
 > 2021-03-16
