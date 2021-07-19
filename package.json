@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "module": "module.js",
@@ -39,8 +39,8 @@
     "@babel/core": "^7.14.6",
     "@babel/polyfill": "^7.12.1",
     "@babel/preset-env": "^7.14.7",
-    "mvt": "^4.1.1",
-    "rollup": "^2.52.7",
+    "mvt": "^4.2.1",
+    "rollup": "^2.53.2",
     "rollup-plugin-babel": "^4.4.0",
     "scrud": "^7.2.1"
   },

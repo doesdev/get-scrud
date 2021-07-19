@@ -13,6 +13,23 @@ const baseOpts = { host, port: 443, cache: true, timeout }
 const apiCall = getScrud(baseOpts)
 const jwt = 'abbc123'
 
+const nextPortGen = (port = 7235) => () => ++port
+const nextPort = nextPortGen()
+
+const getServer = async (port, handler) => {
+  handler = handler || ((req, res) => {
+    const data = req.headers.authorization.replace(/^Bearer\s/, '')
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.statusCode = 200
+    return res.end(JSON.stringify({ data, error: null }))
+  })
+
+  const server = http.createServer(handler)
+  await new Promise((resolve, reject) => { server.listen(port, resolve) })
+
+  return server
+}
+
 test('SEARCH', async (assert) => {
   const data = await apiCall('posts', 'search', {})
   assert.truthy(Array.isArray(data))
@@ -21,8 +38,8 @@ test('SEARCH', async (assert) => {
 test('CREATE', async (assert) => {
   const body = {
     userId: 1,
-    title: `get scrud yo`,
-    body: `test scrud api-age`
+    title: 'get scrud yo',
+    body: 'test scrud api-age'
   }
   const data = await apiCall('posts', 'create', body)
   assert.is(data.userId, 1)
@@ -50,8 +67,8 @@ test('apiCall.search', async (assert) => {
 test('apiCall.create', async (assert) => {
   const body = {
     userId: 1,
-    title: `get scrud yo`,
-    body: `test scrud api-age`
+    title: 'get scrud yo',
+    body: 'test scrud api-age'
   }
   const data = await apiCall.create('posts', body)
   assert.is(data.userId, 1)
@@ -71,16 +88,16 @@ test('apiCall.delete', async (assert) => {
   await assert.notThrowsAsync(() => apiCall.delete('posts', 2))
 })
 
-test(`JWT passed in init is not malformed / doesn't throw`, async (assert) => {
+test('JWT passed in init is not malformed / doesn\'t throw', async (assert) => {
   const apiCallJwtInit = getScrud(Object.assign({ jwt }, baseOpts))
   await assert.notThrowsAsync(() => apiCallJwtInit('posts', 'read', 1))
 })
 
-test(`JWT passed in call is not malformed / doesn't throw`, async (assert) => {
+test('JWT passed in call is not malformed / doesn\'t throw', async (assert) => {
   const body = {
     userId: 1,
-    title: `get scrud yo`,
-    body: `test scrud api-age`
+    title: 'get scrud yo',
+    body: 'test scrud api-age'
   }
 
   await assert.notThrowsAsync(() => apiCall('posts', 'search', {}, jwt))
@@ -90,59 +107,38 @@ test(`JWT passed in call is not malformed / doesn't throw`, async (assert) => {
   await assert.notThrowsAsync(() => apiCall('posts', 'delete', 2, jwt))
 })
 
-test(`Can change options on an instance`, async (assert) => {
-  const handler = (req, res) => {
-    const data = req.headers.authorization.replace(/^Bearer\s/, '')
-    res.setHeader('Content-Type', 'application/json; charset=utf-8')
-    res.statusCode = 200
-    return res.end(JSON.stringify({ data, error: null }))
-  }
-
-  const server = http.createServer(handler)
-  await new Promise((resolve, reject) => { server.listen(7236, resolve) })
-
-  const opts = { host: 'localhost', port: 7236, timeout, jwt }
+test('Can change options on an instance', async (assert) => {
+  const port = nextPort()
+  await getServer(port)
+  const opts = { host: 'localhost', port, timeout, jwt }
   const caller = getScrud(opts)
   const initalJwt = await caller('whatevs', 'read', 1)
 
   assert.is(initalJwt, jwt)
 
   let localJwt = await caller('whatevs', 'read', 1, 'eff')
-
   assert.is(localJwt, 'eff')
 
   caller({ jwt: 'this' })
-
   const newJwt = await caller('whatevs', 'read', 1)
-
   assert.is(newJwt, 'this')
 
   localJwt = await caller('whatevs', 'read', 1, 'noise')
-
   assert.is(localJwt, 'noise')
 })
 
-test(`Can cache instance, use uncached`, async (assert) => {
-  const handler = (req, res) => {
-    const data = req.headers.authorization.replace(/^Bearer\s/, '')
-    res.setHeader('Content-Type', 'application/json; charset=utf-8')
-    res.statusCode = 200
-    return res.end(JSON.stringify({ data, error: null }))
-  }
+test('Can cache instance, use uncached', async (assert) => {
+  const port = nextPort()
+  await getServer(port)
 
-  const server = http.createServer(handler)
-  await new Promise((resolve, reject) => { server.listen(7237, resolve) })
-
-  const opts = { host: 'localhost', port: 7237, timeout, jwt, cache: true }
-
+  const opts = { host: 'localhost', port, timeout, jwt, cache: true }
   await assert.throwsAsync(() => getScrud(opts)('whatevs', 'read', 1))
 
   delete opts.cache
-
   await assert.notThrowsAsync(() => getScrud(opts)('whatevs', 'read', 1))
 })
 
-test(`string resourceId doesn't throw`, async (assert) => {
+test('string resourceId doesn\'t throw', async (assert) => {
   const resource = 'someresource'
   const port = 7942
   const read = (req, res) => scrud.sendData(res, { id: req.id })
@@ -156,4 +152,44 @@ test(`string resourceId doesn't throw`, async (assert) => {
   const data = await caller.read(resource, id)
 
   assert.is(data.id, id)
+})
+
+test('timeout option is respected', async (assert) => {
+  const handler = async (req, res) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    res.statusCode = 200
+    await new Promise((resolve, reject) => setTimeout(resolve, 50))
+    return res.end(JSON.stringify({ data: 'a', error: null }))
+  }
+
+  const port = nextPort()
+  await getServer(port, handler)
+
+  const optsA = { host: 'localhost', port, jwt, timeout: 1 }
+  await assert.throwsAsync(() => getScrud(optsA)('a', 'create', 1, { a: 1 }))
+
+  const optsB = { host: 'localhost', port, jwt, timeout: 30000 }
+  await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
+})
+
+test('maxBodyLength option is respected', async (assert) => {
+  const port = nextPort()
+  await getServer(port)
+
+  const optsA = { host: 'localhost', port, jwt, maxBodyLength: 1 }
+  await assert.throwsAsync(() => getScrud(optsA)('a', 'create', 1, { a: 1 }))
+
+  const optsB = { host: 'localhost', port, jwt, maxBodyLength: 1e5 }
+  await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
+})
+
+test('maxContentLength option is respected', async (assert) => {
+  const port = nextPort()
+  await getServer(port)
+
+  const optsA = { host: 'localhost', port, jwt, maxContentLength: 1 }
+  await assert.throwsAsync(() => getScrud(optsA)('a', 'create', 1, { a: 1 }))
+
+  const optsB = { host: 'localhost', port, jwt, maxContentLength: 1e5 }
+  await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
 })

@@ -68,6 +68,8 @@ export default (opts = {}) => {
         method,
         data: body,
         timeout: opts.timeout,
+        maxBodyLength: opts.maxBodyLength,
+        maxContentLength: opts.maxContentLength,
         headers: { 'Content-Type': 'application/json' }
       }
       if (jwt) options.headers.Authorization = `Bearer ${jwt}`

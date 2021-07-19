@@ -165,6 +165,8 @@ var source = (function () {
         method: method,
         data: body,
         timeout: opts.timeout,
+        maxBodyLength: opts.maxBodyLength,
+        maxContentLength: opts.maxContentLength,
         headers: {
           'Content-Type': 'application/json'
         }

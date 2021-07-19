@@ -2,11 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-### Unreleased
+### [1.6.0](https://github.com/doesdev/get-scrud/compare/1.5.2...1.6.0)
 
-> 2021-06-30
+> 2021-07-19
 
-- Update dev dependencies (rollup, babel)
+- Expose `maxBodyLength` and `maxContentLength` axios options
+- Update dev dependencies (rollup, babel, mvt)
 
 ### [1.5.2](https://github.com/doesdev/get-scrud/compare/1.5.1...1.5.2)
 
