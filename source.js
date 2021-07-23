@@ -29,19 +29,34 @@ let cached
 
 export default (opts = {}) => {
   if (opts.cache && cached) return cached
+
   const setOpts = (altOpts) => {
     opts.port = opts.port || 443
     opts.timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout
     opts.basePath = opts.basePath ? `/${opts.basePath.replace(/^\//, '')}` : ''
 
     const altPort = opts.host && opts.port !== 80 && opts.port !== 443
+
     if (altPort && opts.host.indexOf(`:${opts.port}`) === -1) {
       opts.host = `${opts.host}:${opts.port}`
     }
+
     if (altOpts) Object.assign(opts, altOpts)
+
+    opts.before = typeof opts.before === 'function' ? opts.before : null
   }
 
   setOpts()
+
+  const sendRequest = async (api, action, options) => {
+    if (opts.before) await opts.before(api, action, options)
+
+    const { data = {} } = await request(options)
+
+    if (data.error) throw data.error
+
+    return 'data' in data ? data.data : data
+  }
 
   const getScrud = (api, action, id, body, jwt) => {
     if (api && typeof api === 'object') return setOpts(api)
@@ -52,10 +67,23 @@ export default (opts = {}) => {
         body = id
         id = null
       }
+
+      const handleError = (e) => {
+        e = e || {}
+        const res = e.response || {}
+
+        if ((res.data || {}).error) return reject(new Error(res.data.error))
+        if (res.status === 401) return reject(new Error('Unauthorized'))
+        if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
+
+        return reject(e)
+      }
+
       if (typeof body !== 'object') {
         jwt = body
         body = null
       }
+
       jwt = jwt || opts.jwt
 
       if (!actions[action]) return reject(new Error('Action not SCRUD-y'))
@@ -72,21 +100,10 @@ export default (opts = {}) => {
         maxContentLength: opts.maxContentLength,
         headers: { 'Content-Type': 'application/json' }
       }
+
       if (jwt) options.headers.Authorization = `Bearer ${jwt}`
 
-      request(options).then((res) => {
-        let out = res.data || {}
-        if (out.error) return reject(out.error)
-        out = 'data' in out ? out.data : out
-        return resolve(out)
-      }).catch((e) => {
-        e = e || {}
-        const res = e.response || {}
-        if ((res.data || {}).error) return reject(new Error(res.data.error))
-        if (res.status === 401) return reject(new Error('Unauthorized'))
-        if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
-        return reject(e)
-      })
+      sendRequest(api, action, options).then(resolve).catch(handleError)
     })
   }
 

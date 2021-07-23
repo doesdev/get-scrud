@@ -193,3 +193,20 @@ test('maxContentLength option is respected', async (assert) => {
   const optsB = { host: 'localhost', port, jwt, maxContentLength: 1e5 }
   await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
 })
+
+test('before hook is called', async (assert) => {
+  const port = nextPort()
+  await getServer(port)
+
+  const withError = async () => { throw new Error() }
+
+  const noError = () => {
+    return new Promise((resolve, reject) => setTimeout(resolve, 100))
+  }
+
+  const optsA = { host: 'localhost', port, jwt, before: withError }
+  await assert.throwsAsync(() => getScrud(optsA)('a', 'create', 1, { a: 1 }))
+
+  const optsB = { host: 'localhost', port, jwt, before: noError }
+  await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
+})

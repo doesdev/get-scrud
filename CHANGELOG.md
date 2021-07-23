@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.6.1](https://github.com/doesdev/get-scrud/compare/1.6.0...1.6.1)
+
+> 2021-07-23
+
+- Add `before` hook option
+- Update dev dependencies (rollup, babel)
+
 ### [1.6.0](https://github.com/doesdev/get-scrud/compare/1.5.2...1.6.0)
 
 > 2021-07-19
