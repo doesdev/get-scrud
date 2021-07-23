@@ -24,42 +24,6 @@ function _typeof(obj) {
   return _typeof(obj);
 }
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
 function _slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
 }
@@ -173,53 +137,13 @@ var source = (function () {
 
   setOpts();
 
-  var sendRequest = /*#__PURE__*/function () {
-    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(api, action, options) {
-      var _yield$request, _yield$request$data, data;
-
-      return regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (!opts.before) {
-                _context.next = 3;
-                break;
-              }
-
-              _context.next = 3;
-              return opts.before(api, action, options);
-
-            case 3:
-              _context.next = 5;
-              return request__default['default'](options);
-
-            case 5:
-              _yield$request = _context.sent;
-              _yield$request$data = _yield$request.data;
-              data = _yield$request$data === void 0 ? {} : _yield$request$data;
-
-              if (!data.error) {
-                _context.next = 10;
-                break;
-              }
-
-              throw data.error;
-
-            case 10:
-              return _context.abrupt("return", 'data' in data ? data.data : data);
-
-            case 11:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-
-    return function sendRequest(_x, _x2, _x3) {
-      return _ref.apply(this, arguments);
-    };
-  }();
+  var sendRequest = function sendRequest(options) {
+    return request__default['default'](options).then(function (_ref) {
+      var data = _ref.data;
+      if (data.error) throw data.error;
+      return 'data' in data ? data.data : data;
+    });
+  };
 
   var getScrud = function getScrud(api, action, id, body, jwt) {
     if (api && _typeof(api) === 'object') return setOpts(api);
@@ -266,7 +190,14 @@ var source = (function () {
         }
       };
       if (jwt) options.headers.Authorization = "Bearer ".concat(jwt);
-      sendRequest(api, action, options).then(resolve).catch(handleError);
+
+      if (opts.before) {
+        return opts.before(api, action, options).then(function () {
+          return sendRequest(options).then(resolve).catch(handleError);
+        }).catch(handleError);
+      }
+
+      return sendRequest(options).then(resolve).catch(handleError);
     });
   };
 

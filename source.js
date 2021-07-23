@@ -48,14 +48,12 @@ export default (opts = {}) => {
 
   setOpts()
 
-  const sendRequest = async (api, action, options) => {
-    if (opts.before) await opts.before(api, action, options)
+  const sendRequest = (options) => {
+    return request(options).then(({ data }) => {
+      if (data.error) throw data.error
 
-    const { data = {} } = await request(options)
-
-    if (data.error) throw data.error
-
-    return 'data' in data ? data.data : data
+      return 'data' in data ? data.data : data
+    })
   }
 
   const getScrud = (api, action, id, body, jwt) => {
@@ -103,7 +101,13 @@ export default (opts = {}) => {
 
       if (jwt) options.headers.Authorization = `Bearer ${jwt}`
 
-      sendRequest(api, action, options).then(resolve).catch(handleError)
+      if (opts.before) {
+        return opts.before(api, action, options).then(() => {
+          return sendRequest(options).then(resolve).catch(handleError)
+        }).catch(handleError)
+      }
+
+      return sendRequest(options).then(resolve).catch(handleError)
     })
   }
 

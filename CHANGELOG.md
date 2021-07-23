@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.6.2](https://github.com/doesdev/get-scrud/compare/1.6.1...1.6.2)
+
+> 2021-07-23
+
+- Avoid async funcs, don't want to include regenerator runtime
+
 ### [1.6.1](https://github.com/doesdev/get-scrud/compare/1.6.0...1.6.1)
 
 > 2021-07-23
