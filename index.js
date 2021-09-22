@@ -115,7 +115,7 @@ var actions = {
     return ['DELETE', "/".concat(id)];
   }
 };
-var defTimeout = ms__default['default']('1m');
+var defTimeout = ms__default["default"]('1m');
 var cached;
 var source = (function () {
   var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -123,7 +123,7 @@ var source = (function () {
 
   var setOpts = function setOpts(altOpts) {
     opts.port = opts.port || 443;
-    opts.timeout = (opts.timeout ? ms__default['default'](opts.timeout) : defTimeout) || defTimeout;
+    opts.timeout = (opts.timeout ? ms__default["default"](opts.timeout) : defTimeout) || defTimeout;
     opts.basePath = opts.basePath ? "/".concat(opts.basePath.replace(/^\//, '')) : '';
     var altPort = opts.host && opts.port !== 80 && opts.port !== 443;
 
@@ -138,7 +138,7 @@ var source = (function () {
   setOpts();
 
   var sendRequest = function sendRequest(options) {
-    return request__default['default'](options).then(function (_ref) {
+    return request__default["default"](options).then(function (_ref) {
       var data = _ref.data;
       if (data.error) throw data.error;
       return 'data' in data ? data.data : data;
@@ -165,7 +165,7 @@ var source = (function () {
 
       if (_typeof(body) !== 'object') {
         jwt = body;
-        body = null;
+        body = undefined;
       }
 
       jwt = jwt || opts.jwt;

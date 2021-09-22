@@ -79,7 +79,7 @@ export default (opts = {}) => {
 
       if (typeof body !== 'object') {
         jwt = body
-        body = null
+        body = undefined
       }
 
       jwt = jwt || opts.jwt

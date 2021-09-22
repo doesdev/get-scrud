@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.7.0](https://github.com/doesdev/get-scrud/compare/1.6.2...1.7.0)
+
+> 2021-09-22
+
+- Update dependencies
+- Set body to `undefined` instead of `null`
+
 ### [1.6.2](https://github.com/doesdev/get-scrud/compare/1.6.1...1.6.2)
 
 > 2021-07-23

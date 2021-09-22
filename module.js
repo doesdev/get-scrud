@@ -158,7 +158,7 @@ var source = (function () {
 
       if (_typeof(body) !== 'object') {
         jwt = body;
-        body = null;
+        body = undefined;
       }
 
       jwt = jwt || opts.jwt;
@@ -203,4 +203,4 @@ var source = (function () {
   return getScrud;
 });
 
-export default source;
+export { source as default };
