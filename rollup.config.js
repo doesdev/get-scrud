@@ -1,6 +1,6 @@
 'use strict'
 
-import rollBabel from 'rollup-plugin-babel'
+import rollBabel from '@rollup/plugin-babel'
 export default {
   input: 'source.js',
   output: [
