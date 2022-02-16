@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "module": "module.js",
@@ -31,18 +31,18 @@
   },
   "homepage": "https://github.com/doesdev/get-scrud#readme",
   "dependencies": {
-    "axios": "^0.24.0",
-    "ghooks": "^2.0.4",
+    "axios": "^0.26.0",
     "pico-ms": "^1.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.7",
+    "@babel/core": "^7.17.4",
     "@rollup/plugin-babel": "^5.3.0",
     "@babel/polyfill": "^7.12.1",
-    "@babel/preset-env": "^7.16.8",
+    "@babel/preset-env": "^7.16.11",
+    "ghooks": "^2.0.4",
     "mvt": "^4.2.1",
-    "rollup": "^2.64.0",
-    "scrud": "^7.3.0"
+    "rollup": "^2.67.2",
+    "scrud": "^7.4.0"
   },
   "config": {
     "ghooks": {

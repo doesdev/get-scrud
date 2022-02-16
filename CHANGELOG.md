@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.8.0](https://github.com/doesdev/get-scrud/compare/1.7.1...1.8.0)
+
+> 2022-02-16
+
+- Update dependencies
+- Move ghooks to dev deps, that sneaky bastard
+
 ### [1.7.1](https://github.com/doesdev/get-scrud/compare/1.7.0...1.7.1)
 
 > 2022-01-17
