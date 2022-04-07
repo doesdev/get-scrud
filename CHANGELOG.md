@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.8.1](https://github.com/doesdev/get-scrud/compare/1.8.0...1.8.1)
+
+> 2022-04-07
+
+- Update `axios` to 0.26.1
+
 ### [1.8.0](https://github.com/doesdev/get-scrud/compare/1.7.1...1.8.0)
 
 > 2022-02-16
