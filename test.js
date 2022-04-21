@@ -9,12 +9,13 @@ const scrud = require('scrud')
 
 const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
-const baseOpts = { host, port: 443, cache: true, timeout }
+const baseOpts = { host, port: 443, cache: true, timeout, throttle: true }
 const apiCall = getScrud(baseOpts)
 const jwt = 'abbc123'
 
 const nextPortGen = (port = 7235) => () => ++port
 const nextPort = nextPortGen()
+const sleep = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms))
 
 const getServer = async (port, handler) => {
   handler = handler || ((req, res) => {
@@ -209,4 +210,66 @@ test('before hook is called', async (assert) => {
 
   const optsB = { host: 'localhost', port, jwt, before: noError }
   await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
+})
+
+test('throttle options apply as expected', async (assert) => {
+  const port = nextPort()
+  await getServer(port)
+
+  const interval = 300
+  const throttleA = { threshold: 3, exclude: ['b'], interval }
+  const optsA = { host: 'localhost', port, jwt, throttle: throttleA }
+  const apiClientA = getScrud(optsA)
+
+  await assert.notThrowsAsync(() => apiClientA('a', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientA('a', 'read', 1))
+  await assert.throwsAsync(() => apiClientA('a', 'read', 1))
+
+  try {
+    await apiClientA('a', 'read', 1)
+  } catch (ex) {
+    assert.is(ex.message, 'API calls have been throttled')
+  }
+
+  await sleep(interval * 1.1)
+
+  await assert.notThrowsAsync(() => apiClientA('a', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientA('a', 'read', 1))
+  await assert.throwsAsync(() => apiClientA('a', 'read', 1))
+
+  await assert.notThrowsAsync(() => apiClientA('b', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientA('b', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientA('b', 'read', 1))
+
+  const throttleB = { threshold: 3, exclude: [{ api: 'b', action: 'read' }] }
+  const optsB = { host: 'localhost', port, jwt, throttle: throttleB }
+  const apiClientB = getScrud(optsB)
+
+  await assert.notThrowsAsync(() => apiClientB('a', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientB('a', 'read', 1))
+  await assert.throwsAsync(() => apiClientB('a', 'read', 1))
+
+  await assert.notThrowsAsync(() => apiClientB('b', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientB('b', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientB('b', 'read', 1))
+
+  await assert.notThrowsAsync(() => apiClientB('b', 'search', 1))
+  await assert.notThrowsAsync(() => apiClientB('b', 'search', 1))
+  await assert.throwsAsync(() => apiClientB('b', 'search', 1))
+
+  const throttleC = { threshold: 3, exclude: ['b:read'] }
+  const optsC = { host: 'localhost', port, jwt, throttle: throttleC }
+  const apiClientC = getScrud(optsC)
+
+  await assert.notThrowsAsync(() => apiClientC('a', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientC('a', 'read', 1))
+  await assert.throwsAsync(() => apiClientC('a', 'read', 1))
+
+  await assert.notThrowsAsync(() => apiClientC('b', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientC('b', 'read', 1))
+  await assert.notThrowsAsync(() => apiClientC('b', 'read', 1))
+
+  await assert.notThrowsAsync(() => apiClientC('b', 'search', 1))
+  await assert.notThrowsAsync(() => apiClientC('b', 'search', 1))
+  await assert.throwsAsync(() => apiClientC('b', 'search', 1))
 })

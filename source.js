@@ -2,6 +2,11 @@
 
 import request from 'axios'
 import ms from 'pico-ms'
+import throttler from 'ricks-bricks'
+
+const defTimeout = ms('1m')
+const throttleInterval = ms('45s')
+const maxCallsPerInterval = 45
 const actionList = ['search', 'create', 'read', 'update', 'delete']
 
 const bodyToQuery = (body = {}) => {
@@ -24,11 +29,12 @@ const actions = {
   delete: (id, body) => ['DELETE', `/${id}`]
 }
 
-const defTimeout = ms('1m')
 let cached
 
 export default (opts = {}) => {
   if (opts.cache && cached) return cached
+
+  opts._instance = `${Date.now()}${Math.random().toString(36)}`
 
   const setOpts = (altOpts) => {
     opts.port = opts.port || 443
@@ -44,9 +50,34 @@ export default (opts = {}) => {
     if (altOpts) Object.assign(opts, altOpts)
 
     opts.before = typeof opts.before === 'function' ? opts.before : null
+    opts.throttleOpts = typeof opts.throttle === 'object' ? opts.throttle : {}
+
+    const { exclude: excludeIn } = opts.throttleOpts
+    const excluded = Array.isArray(excludeIn) ? excludeIn : []
+
+    opts.throttleExclude = Object.fromEntries(excluded.map((excl) => {
+      if (typeof excl === 'string') return [excl, true]
+
+      const ary = Array.isArray(excl) ? excl : [excl.api, excl.action, excl.path]
+
+      return [ary.filter((el) => el).join(':'), true]
+    }))
   }
 
   setOpts()
+
+  const throttle = (api, action, path) => {
+    const { throttleOpts = {} } = opts
+    const resetAfter = ms(throttleOpts.interval || throttleInterval)
+    const threshold = throttleOpts.threshold || maxCallsPerInterval
+    const excluded = opts.throttleExclude || {}
+    const throttled = () => { throw new Error('API calls have been throttled') }
+    const sig = `${api}:${action}:${path || ''}`
+
+    if (excluded[sig] || excluded[api] || excluded[`${api}:${action}`]) return
+
+    throttler(`${opts._instance}:${sig}`, throttled, { threshold, resetAfter })
+  }
 
   const sendRequest = (options) => {
     return request(options).then(({ data }) => {
@@ -98,6 +129,8 @@ export default (opts = {}) => {
         maxContentLength: opts.maxContentLength,
         headers: { 'Content-Type': 'application/json' }
       }
+
+      if (opts.throttle) throttle(api, action, path)
 
       if (jwt) options.headers.Authorization = `Bearer ${jwt}`
 

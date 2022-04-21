@@ -19,9 +19,20 @@ $ npm install --save get-scrud
   - **port** *[integer - optional - default: 443]* (ex. `80`)
   - **protocol** *[string - optional - default is based on port]* (ex. `http`)
   - **basePath** *[string - optional - default: null]* (ex. `'api'` or `'/api'`)
-  - **timeout** *[string | integer - optional - default: '1m' / 60000]* (ex. `'3m'`)
+  - **timeout** *[string | integer - optional - default: '1m' | 60000]* (ex. `'3m'`)
   - **jwt** *[string - optional - default: null]* (ex. `'abc123'`)
   - **cache** *[boolean - optional - default: false]* use cached instance instead of a fresh one on each invocation of top-level exported function
+  - **throttle** *[boolean | object - optional - default: false]* throttle API
+  calls, in object form uses the below options, if `true` the defaults are applied
+    - **interval** *[string | integer - default: '45s' | 45000]* reset call
+    counter every X ms
+    - **threshold** *[integer - default: 45]* max calls per interval
+    - **exclude** *[array - default: null]* calls that are ignored by throttle
+      - Array can contain objects, arrays, or strings
+      - The following are all equivalent
+        - `[{ api: 'user', action: 'read' }]`
+        - `[['user', 'read']]`
+        - `['user:read']`
 
 #### Main function returns `Promise` that resolves with JSON parsed response data
 

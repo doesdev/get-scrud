@@ -2,11 +2,13 @@
 
 var request = require('axios');
 var ms = require('pico-ms');
+var throttler = require('ricks-bricks');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
 var request__default = /*#__PURE__*/_interopDefaultLegacy(request);
 var ms__default = /*#__PURE__*/_interopDefaultLegacy(ms);
+var throttler__default = /*#__PURE__*/_interopDefaultLegacy(throttler);
 
 function _typeof(obj) {
   "@babel/helpers - typeof";
@@ -77,6 +79,9 @@ function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
+var defTimeout = ms__default["default"]('1m');
+var throttleInterval = ms__default["default"]('45s');
+var maxCallsPerInterval = 45;
 var actionList = ['search', 'create', 'read', 'update', 'delete'];
 
 var bodyToQuery = function bodyToQuery() {
@@ -109,11 +114,11 @@ var actions = {
     return ['DELETE', "/".concat(id)];
   }
 };
-var defTimeout = ms__default["default"]('1m');
 var cached;
 var source = (function () {
   var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   if (opts.cache && cached) return cached;
+  opts._instance = "".concat(Date.now()).concat(Math.random().toString(36));
 
   var setOpts = function setOpts(altOpts) {
     opts.port = opts.port || 443;
@@ -127,9 +132,38 @@ var source = (function () {
 
     if (altOpts) Object.assign(opts, altOpts);
     opts.before = typeof opts.before === 'function' ? opts.before : null;
+    opts.throttleOpts = _typeof(opts.throttle) === 'object' ? opts.throttle : {};
+    var excludeIn = opts.throttleOpts.exclude;
+    var excluded = Array.isArray(excludeIn) ? excludeIn : [];
+    opts.throttleExclude = Object.fromEntries(excluded.map(function (excl) {
+      if (typeof excl === 'string') return [excl, true];
+      var ary = Array.isArray(excl) ? excl : [excl.api, excl.action, excl.path];
+      return [ary.filter(function (el) {
+        return el;
+      }).join(':'), true];
+    }));
   };
 
   setOpts();
+
+  var throttle = function throttle(api, action, path) {
+    var _opts$throttleOpts = opts.throttleOpts,
+        throttleOpts = _opts$throttleOpts === void 0 ? {} : _opts$throttleOpts;
+    var resetAfter = ms__default["default"](throttleOpts.interval || throttleInterval);
+    var threshold = throttleOpts.threshold || maxCallsPerInterval;
+    var excluded = opts.throttleExclude || {};
+
+    var throttled = function throttled() {
+      throw new Error('API calls have been throttled');
+    };
+
+    var sig = "".concat(api, ":").concat(action, ":").concat(path || '');
+    if (excluded[sig] || excluded[api] || excluded["".concat(api, ":").concat(action)]) return;
+    throttler__default["default"]("".concat(opts._instance, ":").concat(sig), throttled, {
+      threshold: threshold,
+      resetAfter: resetAfter
+    });
+  };
 
   var sendRequest = function sendRequest(options) {
     return request__default["default"](options).then(function (_ref) {
@@ -183,6 +217,7 @@ var source = (function () {
           'Content-Type': 'application/json'
         }
       };
+      if (opts.throttle) throttle(api, action, path);
       if (jwt) options.headers.Authorization = "Bearer ".concat(jwt);
 
       if (opts.before) {
