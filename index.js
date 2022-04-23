@@ -97,6 +97,16 @@ var bodyToQuery = function bodyToQuery() {
   }).join('&');
 };
 
+var ensurePromise = function ensurePromise(fn) {
+  return new Promise(function (resolve, reject) {
+    try {
+      return resolve(fn());
+    } catch (ex) {
+      return reject(ex);
+    }
+  });
+};
+
 var actions = {
   search: function search(id, body) {
     return ['GET', "?".concat(bodyToQuery(body))];
@@ -173,7 +183,7 @@ var source = (function () {
     });
   };
 
-  var getScrud = function getScrud(api, action, id, body, jwt) {
+  var getScrud = function getScrud(api, action, id, body, jwt, contextData) {
     if (api && _typeof(api) === 'object') return setOpts(api);
     return new Promise(function (resolve, reject) {
       if (!Number.isInteger(id) && typeof id !== 'string') {
@@ -221,7 +231,11 @@ var source = (function () {
       if (jwt) options.headers.Authorization = "Bearer ".concat(jwt);
 
       if (opts.before) {
-        return opts.before(api, action, options).then(function () {
+        var before = function before() {
+          return opts.before(api, action, options, contextData);
+        };
+
+        return ensurePromise(before).then(function () {
           return sendRequest(options).then(resolve).catch(handleError);
         }).catch(handleError);
       }
@@ -230,9 +244,13 @@ var source = (function () {
     });
   };
 
-  actionList.forEach(function (a) {
-    getScrud[a] = function (api, id, body, jwt) {
-      return getScrud(api, a, id, body, jwt);
+  actionList.forEach(function (action) {
+    getScrud[action] = function (api) {
+      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      return getScrud.apply(void 0, [api, action].concat(args));
     };
   });
   if (opts.cache) cached = getScrud;

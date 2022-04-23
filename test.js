@@ -210,6 +210,15 @@ test('before hook is called', async (assert) => {
 
   const optsB = { host: 'localhost', port, jwt, before: noError }
   await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
+
+  let contextData
+
+  const setContext = (_0, _1, _3, ctx) => { contextData = ctx }
+  const optsC = { host: 'localhost', port, jwt, before: setContext }
+
+  assert.falsy(contextData)
+  await getScrud(optsC)('a', 'create', 1, { a: 1 }, undefined, true)
+  assert.truthy(contextData)
 })
 
 test('throttle options apply as expected', async (assert) => {

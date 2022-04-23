@@ -21,6 +21,14 @@ const bodyToQuery = (body = {}) => {
   }).join('&')
 }
 
+const ensurePromise = (fn) => new Promise((resolve, reject) => {
+  try {
+    return resolve(fn())
+  } catch (ex) {
+    return reject(ex)
+  }
+})
+
 const actions = {
   search: (id, body) => ['GET', `?${bodyToQuery(body)}`],
   create: (id, body) => ['POST', null],
@@ -87,7 +95,7 @@ export default (opts = {}) => {
     })
   }
 
-  const getScrud = (api, action, id, body, jwt) => {
+  const getScrud = (api, action, id, body, jwt, contextData) => {
     if (api && typeof api === 'object') return setOpts(api)
 
     return new Promise((resolve, reject) => {
@@ -135,7 +143,9 @@ export default (opts = {}) => {
       if (jwt) options.headers.Authorization = `Bearer ${jwt}`
 
       if (opts.before) {
-        return opts.before(api, action, options).then(() => {
+        const before = () => opts.before(api, action, options, contextData)
+
+        return ensurePromise(before).then(() => {
           return sendRequest(options).then(resolve).catch(handleError)
         }).catch(handleError)
       }
@@ -144,8 +154,8 @@ export default (opts = {}) => {
     })
   }
 
-  actionList.forEach((a) => {
-    getScrud[a] = (api, id, body, jwt) => getScrud(api, a, id, body, jwt)
+  actionList.forEach((action) => {
+    getScrud[action] = (api, ...args) => getScrud(api, action, ...args)
   })
 
   if (opts.cache) cached = getScrud
