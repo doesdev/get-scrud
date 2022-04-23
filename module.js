@@ -179,6 +179,7 @@ var source = (function () {
     if (api && _typeof(api) === 'object') return setOpts(api);
     return new Promise(function (resolve, reject) {
       if (!Number.isInteger(id) && typeof id !== 'string') {
+        contextData = jwt;
         jwt = body;
         body = id;
         id = null;

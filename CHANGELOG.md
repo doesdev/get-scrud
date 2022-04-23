@@ -2,9 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.9.1](https://github.com/doesdev/get-scrud/compare/1.9.0...1.9.1)
+
+> 2022-04-23
+
+- Handle case where `contextData` becomes unset
+
 ### [1.9.0](https://github.com/doesdev/get-scrud/compare/1.8.1...1.9.0)
 
-> 2022-04-21
+> 2022-04-23
 
 - Add `throttle` option
 - Pass `contextData` through to `before` function call

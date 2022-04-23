@@ -100,6 +100,7 @@ export default (opts = {}) => {
 
     return new Promise((resolve, reject) => {
       if (!Number.isInteger(id) && typeof id !== 'string') {
+        contextData = jwt
         jwt = body
         body = id
         id = null
