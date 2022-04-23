@@ -9,7 +9,9 @@ const throttleInterval = ms('45s')
 const maxCallsPerInterval = 45
 const actionList = ['search', 'create', 'read', 'update', 'delete']
 
-const bodyToQuery = (body = {}) => {
+const bodyToQuery = (body) => {
+  if (typeof body !== 'object') return ''
+
   return Object.keys(body).map((k) => {
     const bodyRef = body[k]
     const isAry = Array.isArray(bodyRef)

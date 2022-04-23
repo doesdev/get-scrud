@@ -84,8 +84,8 @@ var throttleInterval = ms__default["default"]('45s');
 var maxCallsPerInterval = 45;
 var actionList = ['search', 'create', 'read', 'update', 'delete'];
 
-var bodyToQuery = function bodyToQuery() {
-  var body = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+var bodyToQuery = function bodyToQuery(body) {
+  if (_typeof(body) !== 'object') return '';
   return Object.keys(body).map(function (k) {
     var bodyRef = body[k];
     var isAry = Array.isArray(bodyRef);

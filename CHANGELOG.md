@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [1.9.2](https://github.com/doesdev/get-scrud/compare/1.9.1...1.9.2)
+
+> 2022-04-23
+
+- Handle case where body is not object
+
 ### [1.9.1](https://github.com/doesdev/get-scrud/compare/1.9.0...1.9.1)
 
 > 2022-04-23
