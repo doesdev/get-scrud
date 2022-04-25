@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "type": "module",
