@@ -101,11 +101,14 @@ export default (opts = {}) => {
     if (api && typeof api === 'object') return setOpts(api)
 
     return new Promise((resolve, reject) => {
-      if (!Number.isInteger(id) && typeof id !== 'string') {
-        contextData = jwt
-        jwt = body
-        body = id
-        id = null
+      const idWellFormed = Number.isFinite(+id) || typeof id === 'string'
+
+      if (!idWellFormed) {
+        if (jwt) contextData = jwt
+        if (typeof body === 'string') jwt = body
+        if (typeof id === 'object') body = id
+
+        id = undefined
       }
 
       const handleError = (e) => {
@@ -120,7 +123,8 @@ export default (opts = {}) => {
       }
 
       if (typeof body !== 'object') {
-        jwt = body
+        if (jwt) contextData = jwt
+        if (typeof body === 'string') jwt = body
         body = undefined
       }
 
