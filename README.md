@@ -8,6 +8,12 @@
 $ npm install --save get-scrud
 ```
 
+## 2.0.0
+
+This is a very breaking change, switching to ES Modules and eliminating babel.
+If you are targeting older browsers you will need to include this module in any
+babel-ification you're doing.
+
 ## API
 
 #### Module ships single function which accepts options and returns main function

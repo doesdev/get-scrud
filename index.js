@@ -1,261 +1,167 @@
-'use strict';
+'use strict'
 
-var request = require('axios');
-var ms = require('pico-ms');
-var throttler = require('ricks-bricks');
+import request from 'axios'
+import ms from 'pico-ms'
+import throttler from 'ricks-bricks'
 
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+const defTimeout = ms('1m')
+const throttleInterval = ms('45s')
+const maxCallsPerInterval = 45
+const actionList = ['search', 'create', 'read', 'update', 'delete']
 
-var request__default = /*#__PURE__*/_interopDefaultLegacy(request);
-var ms__default = /*#__PURE__*/_interopDefaultLegacy(ms);
-var throttler__default = /*#__PURE__*/_interopDefaultLegacy(throttler);
+const bodyToQuery = (body) => {
+  if (typeof body !== 'object') return ''
 
-function _typeof(obj) {
-  "@babel/helpers - typeof";
-
-  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
-    return typeof obj;
-  } : function (obj) {
-    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-  }, _typeof(obj);
+  return Object.keys(body).map((k) => {
+    const bodyRef = body[k]
+    const isAry = Array.isArray(bodyRef)
+    if (isAry) k = k.replace(/\[]$/, '')
+    const uK = encodeURIComponent(k)
+    return isAry
+      ? bodyRef.map((v) => `${uK}[]=${encodeURIComponent(v)}`).join('&')
+      : `${uK}=${encodeURIComponent(bodyRef)}`
+  }).join('&')
 }
 
-function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
-}
-
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
-}
-
-function _iterableToArrayLimit(arr, i) {
-  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
-
-  if (_i == null) return;
-  var _arr = [];
-  var _n = true;
-  var _d = false;
-
-  var _s, _e;
-
+const ensurePromise = (fn) => new Promise((resolve, reject) => {
   try {
-    for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
-      _arr.push(_s.value);
+    return resolve(fn())
+  } catch (ex) {
+    return reject(ex)
+  }
+})
 
-      if (i && _arr.length === i) break;
+const actions = {
+  search: (id, body) => ['GET', `?${bodyToQuery(body)}`],
+  create: (id, body) => ['POST', null],
+  read: (id, body) => ['GET', `/${id}${body ? `?${bodyToQuery(body)}` : ''}`],
+  update: (id, body) => ['PUT', `/${id}`],
+  delete: (id, body) => ['DELETE', `/${id}`]
+}
+
+let cached
+
+export default (opts = {}) => {
+  if (opts.cache && cached) return cached
+
+  opts._instance = `${Date.now()}${Math.random().toString(36)}`
+
+  const setOpts = (altOpts) => {
+    opts.port = opts.port || 443
+    opts.timeout = (opts.timeout ? ms(opts.timeout) : defTimeout) || defTimeout
+    opts.basePath = opts.basePath ? `/${opts.basePath.replace(/^\//, '')}` : ''
+
+    const altPort = opts.host && opts.port !== 80 && opts.port !== 443
+
+    if (altPort && opts.host.indexOf(`:${opts.port}`) === -1) {
+      opts.host = `${opts.host}:${opts.port}`
     }
-  } catch (err) {
-    _d = true;
-    _e = err;
-  } finally {
-    try {
-      if (!_n && _i["return"] != null) _i["return"]();
-    } finally {
-      if (_d) throw _e;
-    }
+
+    if (altOpts) Object.assign(opts, altOpts)
+
+    opts.before = typeof opts.before === 'function' ? opts.before : null
+    opts.throttleOpts = typeof opts.throttle === 'object' ? opts.throttle : {}
+
+    const { exclude: excludeIn } = opts.throttleOpts
+    const excluded = Array.isArray(excludeIn) ? excludeIn : []
+
+    opts.throttleExclude = Object.fromEntries(excluded.map((excl) => {
+      if (typeof excl === 'string') return [excl, true]
+
+      const ary = Array.isArray(excl) ? excl : [excl.api, excl.action, excl.path]
+
+      return [ary.filter((el) => el).join(':'), true]
+    }))
   }
 
-  return _arr;
-}
+  setOpts()
 
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-}
+  const throttle = (api, action, path) => {
+    const { throttleOpts = {} } = opts
+    const resetAfter = ms(throttleOpts.interval || throttleInterval)
+    const threshold = throttleOpts.threshold || maxCallsPerInterval
+    const excluded = opts.throttleExclude || {}
+    const throttled = () => { throw new Error('API calls have been throttled') }
+    const sig = `${api}:${action}:${path || ''}`
 
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
+    if (excluded[sig] || excluded[api] || excluded[`${api}:${action}`]) return
 
-  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
-  return arr2;
-}
-
-function _nonIterableRest() {
-  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-
-var defTimeout = ms__default["default"]('1m');
-var throttleInterval = ms__default["default"]('45s');
-var maxCallsPerInterval = 45;
-var actionList = ['search', 'create', 'read', 'update', 'delete'];
-
-var bodyToQuery = function bodyToQuery(body) {
-  if (_typeof(body) !== 'object') return '';
-  return Object.keys(body).map(function (k) {
-    var bodyRef = body[k];
-    var isAry = Array.isArray(bodyRef);
-    if (isAry) k = k.replace(/\[]$/, '');
-    var uK = encodeURIComponent(k);
-    return isAry ? bodyRef.map(function (v) {
-      return "".concat(uK, "[]=").concat(encodeURIComponent(v));
-    }).join('&') : "".concat(uK, "=").concat(encodeURIComponent(bodyRef));
-  }).join('&');
-};
-
-var ensurePromise = function ensurePromise(fn) {
-  return new Promise(function (resolve, reject) {
-    try {
-      return resolve(fn());
-    } catch (ex) {
-      return reject(ex);
-    }
-  });
-};
-
-var actions = {
-  search: function search(id, body) {
-    return ['GET', "?".concat(bodyToQuery(body))];
-  },
-  create: function create(id, body) {
-    return ['POST', null];
-  },
-  read: function read(id, body) {
-    return ['GET', "/".concat(id).concat(body ? "?".concat(bodyToQuery(body)) : '')];
-  },
-  update: function update(id, body) {
-    return ['PUT', "/".concat(id)];
-  },
-  delete: function _delete(id, body) {
-    return ['DELETE', "/".concat(id)];
+    throttler(`${opts._instance}:${sig}`, throttled, { threshold, resetAfter })
   }
-};
-var cached;
-var source = (function () {
-  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  if (opts.cache && cached) return cached;
-  opts._instance = "".concat(Date.now()).concat(Math.random().toString(36));
 
-  var setOpts = function setOpts(altOpts) {
-    opts.port = opts.port || 443;
-    opts.timeout = (opts.timeout ? ms__default["default"](opts.timeout) : defTimeout) || defTimeout;
-    opts.basePath = opts.basePath ? "/".concat(opts.basePath.replace(/^\//, '')) : '';
-    var altPort = opts.host && opts.port !== 80 && opts.port !== 443;
+  const sendRequest = (options) => {
+    return request(options).then(({ data }) => {
+      if (data.error) throw data.error
 
-    if (altPort && opts.host.indexOf(":".concat(opts.port)) === -1) {
-      opts.host = "".concat(opts.host, ":").concat(opts.port);
-    }
+      return 'data' in data ? data.data : data
+    })
+  }
 
-    if (altOpts) Object.assign(opts, altOpts);
-    opts.before = typeof opts.before === 'function' ? opts.before : null;
-    opts.throttleOpts = _typeof(opts.throttle) === 'object' ? opts.throttle : {};
-    var excludeIn = opts.throttleOpts.exclude;
-    var excluded = Array.isArray(excludeIn) ? excludeIn : [];
-    opts.throttleExclude = Object.fromEntries(excluded.map(function (excl) {
-      if (typeof excl === 'string') return [excl, true];
-      var ary = Array.isArray(excl) ? excl : [excl.api, excl.action, excl.path];
-      return [ary.filter(function (el) {
-        return el;
-      }).join(':'), true];
-    }));
-  };
+  const getScrud = (api, action, id, body, jwt, contextData) => {
+    if (api && typeof api === 'object') return setOpts(api)
 
-  setOpts();
-
-  var throttle = function throttle(api, action, path) {
-    var _opts$throttleOpts = opts.throttleOpts,
-        throttleOpts = _opts$throttleOpts === void 0 ? {} : _opts$throttleOpts;
-    var resetAfter = ms__default["default"](throttleOpts.interval || throttleInterval);
-    var threshold = throttleOpts.threshold || maxCallsPerInterval;
-    var excluded = opts.throttleExclude || {};
-
-    var throttled = function throttled() {
-      throw new Error('API calls have been throttled');
-    };
-
-    var sig = "".concat(api, ":").concat(action, ":").concat(path || '');
-    if (excluded[sig] || excluded[api] || excluded["".concat(api, ":").concat(action)]) return;
-    throttler__default["default"]("".concat(opts._instance, ":").concat(sig), throttled, {
-      threshold: threshold,
-      resetAfter: resetAfter
-    });
-  };
-
-  var sendRequest = function sendRequest(options) {
-    return request__default["default"](options).then(function (_ref) {
-      var data = _ref.data;
-      if (data.error) throw data.error;
-      return 'data' in data ? data.data : data;
-    });
-  };
-
-  var getScrud = function getScrud(api, action, id, body, jwt, contextData) {
-    if (api && _typeof(api) === 'object') return setOpts(api);
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       if (!Number.isInteger(id) && typeof id !== 'string') {
-        contextData = jwt;
-        jwt = body;
-        body = id;
-        id = null;
+        contextData = jwt
+        jwt = body
+        body = id
+        id = null
       }
 
-      var handleError = function handleError(e) {
-        e = e || {};
-        var res = e.response || {};
-        if ((res.data || {}).error) return reject(new Error(res.data.error));
-        if (res.status === 401) return reject(new Error('Unauthorized'));
-        if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'));
-        return reject(e);
-      };
+      const handleError = (e) => {
+        e = e || {}
+        const res = e.response || {}
 
-      if (_typeof(body) !== 'object') {
-        jwt = body;
-        body = undefined;
+        if ((res.data || {}).error) return reject(new Error(res.data.error))
+        if (res.status === 401) return reject(new Error('Unauthorized'))
+        if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
+
+        return reject(e)
       }
 
-      jwt = jwt || opts.jwt;
-      if (!actions[action]) return reject(new Error('Action not SCRUD-y'));
+      if (typeof body !== 'object') {
+        jwt = body
+        body = undefined
+      }
 
-      var _actions$action = actions[action](id, body),
-          _actions$action2 = _slicedToArray(_actions$action, 2),
-          method = _actions$action2[0],
-          path = _actions$action2[1];
+      jwt = jwt || opts.jwt
 
-      var protocol = opts.protocol || (opts.port === 443 ? 'https' : 'http');
-      var reqPath = "".concat(opts.basePath, "/").concat(api.toLowerCase()).concat(path || '');
-      var options = {
-        url: "".concat(protocol, "://").concat(opts.host).concat(reqPath),
-        method: method,
+      if (!actions[action]) return reject(new Error('Action not SCRUD-y'))
+
+      const [method, path] = actions[action](id, body)
+      const protocol = opts.protocol || (opts.port === 443 ? 'https' : 'http')
+      const reqPath = `${opts.basePath}/${api.toLowerCase()}${(path || '')}`
+      const options = {
+        url: `${protocol}://${opts.host}${reqPath}`,
+        method,
         data: body,
         timeout: opts.timeout,
         maxBodyLength: opts.maxBodyLength,
         maxContentLength: opts.maxContentLength,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-      if (opts.throttle) throttle(api, action, path);
-      if (jwt) options.headers.Authorization = "Bearer ".concat(jwt);
+        headers: { 'Content-Type': 'application/json' }
+      }
+
+      if (opts.throttle) throttle(api, action, path)
+
+      if (jwt) options.headers.Authorization = `Bearer ${jwt}`
 
       if (opts.before) {
-        var before = function before() {
-          return opts.before(api, action, options, contextData);
-        };
+        const before = () => opts.before(api, action, options, contextData)
 
-        return ensurePromise(before).then(function () {
-          return sendRequest(options).then(resolve).catch(handleError);
-        }).catch(handleError);
+        return ensurePromise(before).then(() => {
+          return sendRequest(options).then(resolve).catch(handleError)
+        }).catch(handleError)
       }
 
-      return sendRequest(options).then(resolve).catch(handleError);
-    });
-  };
+      return sendRequest(options).then(resolve).catch(handleError)
+    })
+  }
 
-  actionList.forEach(function (action) {
-    getScrud[action] = function (api) {
-      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        args[_key - 1] = arguments[_key];
-      }
+  actionList.forEach((action) => {
+    getScrud[action] = (api, ...args) => getScrud(api, action, ...args)
+  })
 
-      return getScrud.apply(void 0, [api, action].concat(args));
-    };
-  });
-  if (opts.cache) cached = getScrud;
-  return getScrud;
-});
+  if (opts.cache) cached = getScrud
 
-module.exports = source;
+  return getScrud
+}

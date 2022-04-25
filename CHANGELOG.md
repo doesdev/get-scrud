@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [2.0.0](https://github.com/doesdev/get-scrud/compare/1.9.2...2.0.0)
+
+> 2022-04-25
+
+- [Breaking] Change to ES Module
+
 ### [1.9.2](https://github.com/doesdev/get-scrud/compare/1.9.1...1.9.2)
 
 > 2022-04-23

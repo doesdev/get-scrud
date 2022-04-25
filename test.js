@@ -1,11 +1,9 @@
 'use strict'
 
-require('@babel/polyfill')
-
-const test = require('mvt')
-const getScrud = require('./index')
-const http = require('http')
-const scrud = require('scrud')
+import test from 'mvt'
+import http from 'http'
+import scrud from 'scrud'
+import getScrud from './index.js'
 
 const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
