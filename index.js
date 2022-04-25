@@ -158,7 +158,9 @@ export default (opts = {}) => {
   }
 
   actionList.forEach((action) => {
-    getScrud[action] = (api, ...args) => getScrud(api, action, ...args)
+    getScrud[action] = (api, id, body, jwt, contextData) => {
+      return getScrud(api, action, id, body, jwt, contextData)
+    }
   })
 
   if (opts.cache) cached = getScrud
