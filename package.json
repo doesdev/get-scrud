@@ -34,13 +34,7 @@
     "ricks-bricks": "^1.1.0"
   },
   "devDependencies": {
-    "ghooks": "^2.0.4",
     "mvt": "doesdev/mvt#49d356b",
     "scrud": "^7.4.1"
-  },
-  "config": {
-    "ghooks": {
-      "pre-commit": "mvt"
-    }
   }
 }
