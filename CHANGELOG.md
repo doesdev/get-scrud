@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [3.0.0-beta.1](https://github.com/doesdev/get-scrud/compare/2.0.0...3.0.0-beta.1)
+
+> 2022-11-03
+
+- [Breaking] Update axios to 1.x.x (1.1.2 to be exact)
+- [Dev] Switch to yarn
+
 ### [2.0.0](https://github.com/doesdev/get-scrud/compare/1.9.2...2.0.0)
 
 > 2022-04-25

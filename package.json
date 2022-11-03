@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "2.0.0",
+  "version": "3.0.0-beta.1",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "type": "module",
@@ -29,12 +29,12 @@
   },
   "homepage": "https://github.com/doesdev/get-scrud#readme",
   "dependencies": {
-    "axios": "^0.26.1",
+    "axios": "1.1.2",
     "pico-ms": "^1.1.1",
     "ricks-bricks": "^1.1.0"
   },
   "devDependencies": {
-    "mvt": "doesdev/mvt#49d356b",
+    "mvt": "^5.0.0-beta.1",
     "scrud": "^7.4.1"
   }
 }
