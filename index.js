@@ -31,14 +31,6 @@ const ensurePromise = (fn) => new Promise((resolve, reject) => {
   }
 })
 
-const actions = {
-  search: (id, body) => ['GET', `?${bodyToQuery(body)}`],
-  create: (id, body) => ['POST', null],
-  read: (id, body) => ['GET', `/${id}${body ? `?${bodyToQuery(body)}` : ''}`],
-  update: (id, body) => ['PUT', `/${id}`],
-  delete: (id, body) => ['DELETE', `/${id}`]
-}
-
 let cached
 
 export default (opts = {}) => {
@@ -87,6 +79,18 @@ export default (opts = {}) => {
     if (excluded[sig] || excluded[api] || excluded[`${api}:${action}`]) return
 
     throttler(`${opts._instance}:${sig}`, throttled, { threshold, resetAfter })
+  }
+
+  const actions = {
+    search: (id, body) => {
+      const qStr = bodyToQuery(body)
+      const usePost = opts.autoPostSearch && qStr.length > 1500
+      return usePost ? ['POST', '?_search=true'] : ['GET', `?${qStr}`]
+    },
+    create: (id, body) => ['POST', null],
+    read: (id, body) => ['GET', `/${id}${body ? `?${bodyToQuery(body)}` : ''}`],
+    update: (id, body) => ['PUT', `/${id}`],
+    delete: (id, body) => ['DELETE', `/${id}`]
   }
 
   const sendRequest = (options) => {

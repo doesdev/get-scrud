@@ -153,6 +153,30 @@ test('string resourceId doesn\'t throw', async (assert) => {
   assert.is(data.id, id)
 })
 
+test('SEARCH switches to POST for URL > 1800 characters', async (assert) => {
+  const resource = 'someresource'
+  const port = 7943
+  const search = (req, res) => scrud.sendData(
+    res,
+    { ...req.params, method: req.method }
+  )
+
+  await scrud.register(resource, { search })
+  await scrud.start({ port })
+
+  const opts = { host: 'localhost', port, timeout, jwt }
+  const callerNoSwitch = getScrud(opts)
+  const query = { a: 'B', madLong: Array(20000).fill('X').join('') }
+
+  await assert.throwsAsync(() => callerNoSwitch.search(resource, query))
+
+  const caller = getScrud({ ...opts, autoPostSearch: true })
+  const data = await caller.search(resource, query)
+
+  assert.is(data.a, 'B')
+  assert.is(data.method, 'POST')
+})
+
 test('timeout option is respected', async (assert) => {
   const handler = async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8')

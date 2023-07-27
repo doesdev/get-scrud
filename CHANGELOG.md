@@ -2,10 +2,11 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-### [3.0.0-beta.1](https://github.com/doesdev/get-scrud/compare/2.0.0...3.0.0-beta.1)
+### [3.0.0](https://github.com/doesdev/get-scrud/compare/2.0.0...3.0.0)
 
-> 2022-11-03
+> 2023-07-26
 
+- [Feature] Add autoPostSearch option, which switches to POST for SEARCH when querystring over 1500 chars
 - [Breaking] Update axios to 1.x.x (1.1.2 to be exact)
 - [Dev] Switch to yarn
 
