@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [3.1.0](https://github.com/doesdev/get-scrud/compare/3.0.0...3.1.0)
+
+> 2023-07-26
+
+- [Feature] Filter authorization from Axios errors
+
 ### [3.0.0](https://github.com/doesdev/get-scrud/compare/2.0.0...3.0.0)
 
 > 2023-07-26

@@ -123,6 +123,17 @@ export default (opts = {}) => {
         if (res.status === 401) return reject(new Error('Unauthorized'))
         if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
 
+        const filteredJson = (Boolean(jwt) && JSON.stringify(e)) || ''
+
+        if (filteredJson.indexOf(jwt) !== -1) {
+          try {
+            e = JSON.parse(filteredJson.replaceAll(jwt, 'xxxxx'))
+          } catch (ex) {
+            delete e.config
+            delete e.request
+          }
+        }
+
         return reject(e)
       }
 

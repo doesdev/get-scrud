@@ -304,3 +304,13 @@ test('throttle options apply as expected', async (assert) => {
   await assert.notThrowsAsync(() => apiClientC('b', 'search', 1))
   await assert.throwsAsync(() => apiClientC('b', 'search', 1))
 })
+
+test('error is filtered', async (assert) => {
+  const optsA = { host: 'localhost', port: 10000, jwt }
+
+  try {
+    await getScrud(optsA)('a', 'create', 1, { a: 1 })
+  } catch (ex) {
+    assert.doesNotContain(ex, jwt)
+  }
+})
