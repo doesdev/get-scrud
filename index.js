@@ -118,10 +118,13 @@ export default (opts = {}) => {
       const handleError = (e) => {
         e = e || {}
         const res = e.response || {}
+        const makeError = (errIn) => {
+          return Object.assign(new Error(errIn), { httpCode: res.status })
+        }
 
-        if ((res.data || {}).error) return reject(new Error(res.data.error))
-        if (res.status === 401) return reject(new Error('Unauthorized'))
-        if (e.code === 'ECONNRESET') return reject(new Error('Request timeout'))
+        if ((res.data || {}).error) return reject(makeError(res.data.error))
+        if (res.status === 401) return reject(makeError('Unauthorized'))
+        if (e.code === 'ECONNRESET') return reject(makeError('Request timeout'))
 
         const filteredJson = (Boolean(jwt) && JSON.stringify(e)) || ''
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [3.2.0](https://github.com/doesdev/get-scrud/compare/3.1.0...3.2.0)
+
+> 2023-09-18
+
+- [Feature] Add httpCode to custom errors
+
 ### [3.1.0](https://github.com/doesdev/get-scrud/compare/3.0.0...3.1.0)
 
 > 2023-07-26
