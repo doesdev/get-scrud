@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [3.2.1](https://github.com/doesdev/get-scrud/compare/3.2.0...3.2.1)
+
+> 2023-09-18
+
+- [Feature] Add httpError text
+- [Feature] Ensure httpCode and httpError are set on all error returns
+
 ### [3.2.0](https://github.com/doesdev/get-scrud/compare/3.1.0...3.2.0)
 
 > 2023-09-18
