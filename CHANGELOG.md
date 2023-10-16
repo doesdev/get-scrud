@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [4.0.0](https://github.com/doesdev/get-scrud/compare/3.2.1...4.0.0)
+
+> 2023-10-16
+
+- [Breaking] Change error handling to use custom WebError
+- [Deps] Update axios to 1.5.1
+
 ### [3.2.1](https://github.com/doesdev/get-scrud/compare/3.2.0...3.2.1)
 
 > 2023-09-18

@@ -31,6 +31,125 @@ const ensurePromise = (fn) => new Promise((resolve, reject) => {
   }
 })
 
+const toNumber = (val) => {
+  val = parseInt(val, 10)
+  return (!val || !Number.isFinite(val)) ? null : val
+}
+
+const hasOwnProperty = (obj, p) => Object.prototype.hasOwnProperty.call(obj, p)
+
+const codeMap = {
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  402: 'Payment Required',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  407: 'Proxy Authentication Required',
+  408: 'Request Timeout',
+  409: 'Conflict',
+  410: 'Gone',
+  411: 'Length Required',
+  412: 'Precondition Failed',
+  413: 'Content Too Large',
+  414: 'URI Too Long',
+  415: 'Unsupported Media Type',
+  416: 'Range Not Satisfiable',
+  417: 'Expectation Failed',
+  418: "I'm a teapot",
+  421: 'Misdirected Request',
+  422: 'Unprocessable Content',
+  423: 'Locked',
+  424: 'Failed Dependency',
+  425: 'Too Early',
+  426: 'Upgrade Required',
+  428: 'Precondition Required',
+  429: 'Too Many Requests',
+  431: 'Request Header Fields Too Large',
+  451: 'Unavailable For Legal Reasons',
+  500: 'Internal Server Error',
+  501: 'Not Implemented',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
+  505: 'HTTP Version Not Supported',
+  506: 'Variant Also Negotiates',
+  507: 'Insufficient Storage',
+  508: 'Loop Detected',
+  510: 'Not Extended',
+  511: 'Network Authentication Required'
+}
+
+const codeMapReverse = Object.fromEntries(
+  Object.entries(codeMap).map(([k, v]) => [v, k])
+)
+
+class WebError extends Error {
+  constructor (...args) {
+    const {
+      meta,
+      stack,
+      fileName,
+      lineNumber,
+      code: codeIn,
+      message: msgIn,
+      statusCode: statusCodeIn
+    } = WebError.parseArgs(args)
+
+    const statusCode = toNumber(statusCodeIn || codeMapReverse[msgIn] || 500)
+    const message = msgIn || codeMap[statusCode] || codeMap[500]
+    const code = codeIn || `HTTP_${statusCode}`
+
+    super(message, fileName, lineNumber)
+    Object.assign(this, { statusCode, message, code, stack, meta })
+  }
+
+  static parseArgs (args) {
+    const init = args[0]
+    const initType = typeof init
+    const asNumber = initType === 'number' || typeof toNumber(init) === 'number'
+
+    if (asNumber) return WebError.fromPositional(args)
+
+    const asString = initType === 'string'
+
+    if (asString) return WebError.fromString(args)
+
+    const asObject = hasOwnProperty(init, 'message')
+
+    if (asObject) return WebError.fromObject(args)
+
+    return WebError.fromPositional([500])
+  }
+
+  static fromPositional (args) {
+    const [statusCode, meta, message, fileName, lineNumber, code, stack] = args
+    return { statusCode, meta, message, fileName, lineNumber, code, stack }
+  }
+
+  static fromString ([message]) {
+    return { message }
+  }
+
+  static fromObject (args) {
+    const {
+      meta,
+      code,
+      stack,
+      message,
+      fileName,
+      statusCode,
+      lineNumber
+    } = args[0]
+    return { statusCode, meta, message, fileName, lineNumber, code, stack }
+  }
+
+  get clientMessage () {
+    return this.statusCode === 500 ? codeMap[500] : this.message
+  }
+}
+
 let cached
 
 export default (opts = {}) => {
@@ -119,57 +238,13 @@ export default (opts = {}) => {
         e = e || {}
         const res = e.response || {}
 
-        const errMap = {
-          400: 'Bad Request',
-          401: 'Unauthorized',
-          402: 'Payment Required',
-          403: 'Forbidden',
-          404: 'Not Found',
-          405: 'Method Not Allowed',
-          406: 'Not Acceptable',
-          407: 'Proxy Authentication Required',
-          408: 'Request Timeout',
-          409: 'Conflict',
-          410: 'Gone',
-          411: 'Length Required',
-          412: 'Precondition Failed',
-          413: 'Content Too Large',
-          414: 'URI Too Long',
-          415: 'Unsupported Media Type',
-          416: 'Range Not Satisfiable',
-          417: 'Expectation Failed',
-          418: "I'm a teapot",
-          421: 'Misdirected Request',
-          422: 'Unprocessable Content',
-          423: 'Locked',
-          424: 'Failed Dependency',
-          425: 'Too Early',
-          426: 'Upgrade Required',
-          428: 'Precondition Required',
-          429: 'Too Many Requests',
-          431: 'Request Header Fields Too Large',
-          451: 'Unavailable For Legal Reasons',
-          500: 'Internal Server Error',
-          501: 'Not Implemented',
-          502: 'Bad Gateway',
-          503: 'Service Unavailable',
-          504: 'Gateway Timeout',
-          505: 'HTTP Version Not Supported',
-          506: 'Variant Also Negotiates',
-          507: 'Insufficient Storage',
-          508: 'Loop Detected',
-          510: 'Not Extended',
-          511: 'Network Authentication Required'
-        }
-
         const rejectError = (errIn, httpCode = res.status || 500) => {
-          const httpError = res.statusText || errMap[httpCode] || 'Other error'
-          return reject(Object.assign(new Error(errIn), { httpCode, httpError }))
+          return reject(new WebError(errIn))
         }
 
         if ((res.data || {}).error) return rejectError(res.data.error)
-        if (res.status === 401) return rejectError('Unauthorized')
-        if (e.code === 'ECONNRESET') return rejectError('Request timeout', 408)
+        if (res.status === 401) return rejectError(401)
+        if (e.code === 'ECONNRESET') return rejectError(408)
 
         const filteredJson = (Boolean(jwt) && JSON.stringify(e)) || ''
 
