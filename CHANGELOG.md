@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+### [5.0.0](https://github.com/doesdev/get-scrud/compare/4.1.0...5.0.0)
+
+> 2025-05-21
+
+- [Breaking] Remove axios dependency in favor of native fetch API
+- [Breaking] Increase Node.js requirement to v18.0.0+ (for native fetch support)
+- Improve error handling for fetch responses
+
+### [4.1.0](https://github.com/doesdev/get-scrud/compare/4.0.0...4.1.0)
+
+> 2024-02-03
+
+- [Deps] Update axios to 1.9.0
+
 ### [4.0.0](https://github.com/doesdev/get-scrud/compare/3.2.1...4.0.0)
 
 > 2023-10-16

@@ -1,6 +1,32 @@
-import request from 'axios'
 import ms from 'pico-ms'
 import throttler from 'ricks-bricks'
+
+const getGlobal = (globalProperty) => {
+  return typeof global !== 'undefined' ? global[globalProperty] : undefined
+}
+
+const getFetch = () => {
+  const locFetch = typeof fetch !== 'undefined' ? fetch : getGlobal('fetch')
+
+  if (!locFetch) throw new Error('Fetch API not available')
+
+  return locFetch
+}
+
+const getAbortController = () => {
+  const abortDirect = typeof AbortController !== 'undefined' && AbortController
+  const abortGlobal = getGlobal('AbortController')
+
+  return abortDirect || abortGlobal || class AbortControllerPolyfill {
+    constructor () {
+      this.signal = { aborted: false }
+    }
+
+    abort () {
+      this.signal.aborted = true
+    }
+  }
+}
 
 const defTimeout = ms('1m')
 const throttleInterval = ms('45s')
@@ -150,7 +176,7 @@ class WebError extends Error {
 
 let cached
 
-export default (opts = {}) => {
+const getScrudInstance = (opts = {}) => {
   if (opts.cache && cached) return cached
 
   opts._instance = `${Date.now()}${Math.random().toString(36)}`
@@ -210,12 +236,84 @@ export default (opts = {}) => {
     delete: (id, body) => ['DELETE', `/${id}`]
   }
 
-  const sendRequest = (options) => {
-    return request(options).then(({ data }) => {
-      if (data.error) throw data.error
+  const sendRequest = async (options) => {
+    const { url, method, headers, data, timeout, maxBodyLength, maxContentLength } = options
+    const fetchImpl = getFetch()
+    const AbortControllerImpl = getAbortController()
+    const controller = new AbortControllerImpl()
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
 
-      return 'data' in data ? data.data : data
-    })
+    try {
+      const fetchOptions = {
+        method,
+        headers,
+        signal: controller.signal
+      }
+
+      if (data && method !== 'GET' && method !== 'HEAD') {
+        fetchOptions.body = JSON.stringify(data)
+      } else if (data && method === 'GET' && options.url.includes('?_search=true')) {
+        fetchOptions.body = JSON.stringify(data)
+      }
+
+      if (data && maxBodyLength && JSON.stringify(data).length > maxBodyLength) {
+        throw new Error('Request body larger than maxBodyLength limit')
+      }
+
+      const response = await fetchImpl(url, fetchOptions)
+      const contentType = response.headers.get('content-type')
+      const asJson = contentType && contentType.includes('application/json')
+
+      if (maxContentLength) {
+        const contentLength = response.headers.get('content-length')
+
+        if (contentLength && parseInt(contentLength, 10) > maxContentLength) {
+          throw new Error('Response size larger than maxContentLength limit')
+        }
+      }
+
+      if (!response.ok) {
+        const { status, statusText } = response
+
+        try {
+          const errorData = asJson && await response.json()
+          const data = errorData || { error: await response.text() }
+          const errorReponse = { status, statusText, data }
+          throw errorReponse
+        } catch (e) {
+          const data = { error: response.statusText }
+          const errorReponse = { status, statusText, data }
+          throw errorReponse
+        }
+      }
+
+      const extractData = async () => {
+        const json = asJson && await response.json()
+        const text = !asJson && await response.text()
+
+        try {
+          return json || JSON.parse(text)
+        } catch (e) {
+          return { data: text }
+        }
+      }
+
+      const responseData = await extractData()
+
+      if (responseData.error) throw responseData.error
+
+      return 'data' in responseData ? responseData.data : responseData
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        const timeoutError = new Error(`timeout of ${timeout}ms exceeded`)
+        timeoutError.code = 'ECONNABORTED'
+        throw timeoutError
+      }
+
+      throw error
+    } finally {
+      clearTimeout(timeoutId)
+    }
   }
 
   const getScrud = (api, action, id, body, jwt, contextData) => {
@@ -234,15 +332,22 @@ export default (opts = {}) => {
 
       const handleError = (e) => {
         e = e || {}
-        const res = e.response || {}
 
-        const rejectError = (errIn, httpCode = res.status || 500) => {
-          return reject(new WebError(errIn))
+        const status = e.status || e.statusCode
+        const as504 = e.name === 'TypeError' && e.message?.includes('fetch')
+
+        const res = {
+          status: status || (as504 ? 504 : 500),
+          data: e.data || (typeof e.body === 'object' ? e.body : undefined)
         }
+
+        const rejectError = (errIn) => reject(new WebError(errIn))
 
         if ((res.data || {}).error) return rejectError(res.data.error)
         if (res.status === 401) return rejectError(401)
-        if (e.code === 'ECONNRESET') return rejectError(408)
+        if (e.code === 'ECONNRESET' || e.name === 'AbortError') {
+          return rejectError(408)
+        }
 
         const filteredJson = (Boolean(jwt) && JSON.stringify(e)) || ''
 
@@ -250,8 +355,8 @@ export default (opts = {}) => {
           try {
             e = JSON.parse(filteredJson.replaceAll(jwt, 'xxxxx'))
           } catch (ex) {
-            delete e.config
-            delete e.request
+            if (e.config) delete e.config
+            if (e.request) delete e.request
           }
         }
 
@@ -307,3 +412,5 @@ export default (opts = {}) => {
 
   return getScrud
 }
+
+export default getScrudInstance

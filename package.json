@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "type": "module",
@@ -8,10 +8,12 @@
     "index.js"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "mvt --verbose"
+    "test": "yarn test:node",
+    "test:node": "mvt --verbose test/node.js",
+    "test:browser": "mvt --verbose test/node.js"
   },
   "repository": {
     "type": "git",
@@ -29,13 +31,14 @@
   },
   "homepage": "https://github.com/doesdev/get-scrud#readme",
   "dependencies": {
-    "axios": "1.9.0",
-    "pico-ms": "^1.1.1",
-    "ricks-bricks": "^1.1.0"
+    "pico-ms": "^2.0.1",
+    "ricks-bricks": "^2.0.0"
   },
   "devDependencies": {
     "mvt": "^5.0.0-beta.1",
+    "playwright": "^1.52.0",
     "scrud": "^10.0.0",
     "standard": "^17.1.2"
-  }
+  },
+  "packageManager": "yarn@4.9.1"
 }

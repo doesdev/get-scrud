@@ -8,6 +8,12 @@
 $ npm install --save get-scrud
 ```
 
+## 5.0.0
+
+This version removes the axios dependency and uses native fetch API instead.
+This change requires Node.js v18+ or a fetch-compatible environment.
+If you're running on older Node.js versions, you'll need to provide a fetch polyfill.
+
 ## 2.0.0
 
 This is a very breaking change, switching to ES Modules and eliminating babel.

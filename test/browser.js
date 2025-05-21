@@ -1,7 +1,7 @@
 import test from 'mvt'
 import http from 'http'
 import * as scrud from 'scrud'
-import getScrud from './index.js'
+import getScrud from './_browser/runner.js'
 
 const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
