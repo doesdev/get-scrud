@@ -1,8 +1,6 @@
-'use strict'
-
 import test from 'mvt'
 import http from 'http'
-import scrud from 'scrud'
+import * as scrud from 'scrud'
 import getScrud from './index.js'
 
 const host = 'jsonplaceholder.typicode.com'

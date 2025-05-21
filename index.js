@@ -1,5 +1,3 @@
-'use strict'
-
 import request from 'axios'
 import ms from 'pico-ms'
 import throttler from 'ricks-bricks'
