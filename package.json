@@ -1,6 +1,6 @@
 {
   "name": "get-scrud",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Client for SCRUD style rest APIs",
   "main": "index.js",
   "type": "module",
@@ -11,9 +11,9 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "yarn test:node",
+    "test": "yarn test:node && yarn test:browser",
     "test:node": "mvt --verbose test/node.js",
-    "test:browser": "mvt --verbose test/node.js"
+    "test:browser": "mvt --verbose test/browser.js"
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
   "devDependencies": {
     "mvt": "^5.0.0-beta.1",
     "playwright": "^1.52.0",
-    "scrud": "^10.0.0",
+    "scrud": "^10.1.0",
     "standard": "^17.1.2"
   },
   "packageManager": "yarn@4.9.1"

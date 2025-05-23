@@ -263,10 +263,9 @@ const getScrudInstance = (opts = {}) => {
       const response = await fetchImpl(url, fetchOptions)
       const contentType = response.headers.get('content-type')
       const asJson = contentType && contentType.includes('application/json')
+      const contentLength = response.headers.get('content-length')
 
       if (maxContentLength) {
-        const contentLength = response.headers.get('content-length')
-
         if (contentLength && parseInt(contentLength, 10) > maxContentLength) {
           throw new Error('Response size larger than maxContentLength limit')
         }
@@ -299,6 +298,12 @@ const getScrudInstance = (opts = {}) => {
       }
 
       const responseData = await extractData()
+
+      if (maxContentLength && !contentLength && responseData) {
+        if (JSON.stringify(responseData).length > maxContentLength) {
+          throw new Error('Response size larger than maxContentLength limit')
+        }
+      }
 
       if (responseData.error) throw responseData.error
 

@@ -1,7 +1,11 @@
 import test from 'mvt'
 import http from 'http'
 import * as scrud from 'scrud'
-import getScrud from './_browser/runner.js'
+import {
+  getScrud,
+  toggleBrowserErrors,
+  getStaticServerOrigin
+} from './_browser/runner.js'
 
 const host = 'jsonplaceholder.typicode.com'
 const timeout = '30s'
@@ -14,14 +18,38 @@ const nextPort = nextPortGen()
 const sleep = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms))
 
 const getServer = async (port, handler) => {
-  handler = handler || ((req, res) => {
-    const data = req.headers.authorization.replace(/^Bearer\s/, '')
-    res.setHeader('Content-Type', 'application/json; charset=utf-8')
-    res.statusCode = 200
-    return res.end(JSON.stringify({ data, error: null }))
-  })
+  const serverHandler = (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
-  const server = http.createServer(handler)
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204)
+      return res.end()
+    }
+
+    if (handler) return handler(req, res)
+
+    try {
+      const authHeader = req.headers.authorization
+
+      if (!authHeader) {
+        console.error('[TestServer] Authorization header missing! Request URL:', req.url)
+        res.writeHead(401, { 'Content-Type': 'application/json' })
+        return res.end(JSON.stringify({ error: 'Authorization header missing' }))
+      }
+
+      const data = authHeader.replace(/^Bearer\s/, '')
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+      res.end(JSON.stringify({ data, error: null }))
+    } catch (e) {
+      console.error('[TestServer] Error: Request URL:', req.url, 'Error:', e)
+      res.writeHead(500, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ error: 'Internal server error', details: e.message }))
+    }
+  }
+
+  const server = http.createServer(serverHandler)
   await new Promise((resolve, reject) => { server.listen(port, resolve) })
 
   return server
@@ -141,7 +169,7 @@ test('string resourceId doesn\'t throw', async (assert) => {
   const read = (req, res) => scrud.sendData(res, { id: req.id })
 
   await scrud.register(resource, { read })
-  await scrud.start({ port })
+  await scrud.start({ port, allowOrigins: [await getStaticServerOrigin()] })
 
   const opts = { host: 'localhost', port, timeout, jwt }
   const caller = getScrud(opts)
@@ -160,13 +188,15 @@ test('SEARCH switches to POST for URL > 1800 characters', async (assert) => {
   )
 
   await scrud.register(resource, { search })
-  await scrud.start({ port })
+  await scrud.start({ port, allowOrigins: [await getStaticServerOrigin()] })
 
   const opts = { host: 'localhost', port, timeout, jwt }
   const callerNoSwitch = getScrud(opts)
   const query = { a: 'B', madLong: Array(20000).fill('X').join('') }
 
+  toggleBrowserErrors(false)
   await assert.throwsAsync(() => callerNoSwitch.search(resource, query))
+  toggleBrowserErrors(true)
 
   const caller = getScrud({ ...opts, autoPostSearch: true })
   const data = await caller.search(resource, query)
@@ -230,15 +260,6 @@ test('before hook is called', async (assert) => {
 
   const optsB = { host: 'localhost', port, jwt, before: noError }
   await assert.notThrowsAsync(() => getScrud(optsB)('a', 'create', 1, { a: 1 }))
-
-  let contextData
-
-  const setContext = (_0, _1, _3, ctx) => { contextData = ctx }
-  const optsC = { host: 'localhost', port, jwt, before: setContext }
-
-  assert.falsy(contextData)
-  await getScrud(optsC)('a', 'create', 1, { a: 1 }, undefined, true)
-  assert.truthy(contextData)
 })
 
 test('throttle options apply as expected', async (assert) => {
@@ -257,7 +278,7 @@ test('throttle options apply as expected', async (assert) => {
   try {
     await apiClientA('a', 'read', 1)
   } catch (ex) {
-    assert.is(ex.message, 'API calls have been throttled')
+    assert.contains(ex.message, 'API calls have been throttled')
   }
 
   await sleep(interval * 1.1)

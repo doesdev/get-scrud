@@ -1,1 +1,88 @@
-<html></html>
+<html>
+<head>
+  <title>Scrud Test Environment</title>
+</head>
+<body>
+  <h1>Scrud Test Page</h1>
+  <script>
+    // Set isScrudPageReady to true early.
+    // If the import or subsequent setup fails, this will still be true,
+    // and the error will be in initializeScrudInBrowser or getScrud.
+    window.isScrudPageReady = true;
+    console.log('[Browser] index.html: Set isScrudPageReady=true.');
+    window.browserInitializationError = null; // For detailed error reporting
+
+    // Make getScrud available globally for initializeScrudInBrowser
+    // This requires getScrud to be exported as default from scrud-main-module.js
+    // and for the server to serve it correctly as a JS module.
+    let getScrudModuleDefault; // Renamed to avoid potential global conflicts
+
+    (async () => {
+      try {
+        console.log('[Browser] Attempting to import /scrud-main-module.js...');
+        const scrudModule = await import('/scrud-main-module.js');
+        console.log('[Browser] /scrud-main-module.js import promise resolved.');
+
+        if (!scrudModule) {
+          const errorMsg = '[Browser] scrudModule is null or undefined after import.';
+          console.error(errorMsg);
+          window.browserInitializationError = errorMsg;
+          return;
+        }
+
+        getScrudModuleDefault = scrudModule.default;
+        console.log('[Browser] getScrud module default export obtained.');
+
+        if (typeof getScrudModuleDefault !== 'function') {
+          const type = typeof getScrudModuleDefault;
+          const keys = Object.keys(scrudModule).join(', ') || 'none';
+          const errorMsg = `[Browser] Imported getScrud (default export) is not a function. Type: ${type}. Module keys: ${keys}`;
+          console.error(errorMsg);
+          window.browserInitializationError = errorMsg;
+          return;
+        }
+        console.log('[Browser] Imported getScrud (default export) is a function.');
+
+        // Define initializeScrudInBrowser after getScrud is potentially available
+        window.initializeScrudInBrowser = (opts) => {
+          console.log('[Browser] initializeScrudInBrowser called with opts:', opts);
+          if (typeof getScrudModuleDefault !== 'function') {
+            const errorMsg = '[Browser] getScrudModuleDefault is not available or not a function at initialization time.';
+            console.error(errorMsg);
+            window.browserInitializationError = errorMsg; // Should ideally not be hit if outer checks passed
+            throw new Error('getScrudModuleDefault is not available for initialization.');
+          }
+          try {
+            if (typeof opts.before === 'string') {
+              opts.before = new Function(`return ${opts.before}`)()
+            }
+
+            window.scrudInstance = getScrudModuleDefault(opts);
+            if (window.scrudInstance && typeof window.scrudInstance === 'function') {
+              console.log('[Browser] Main scrudInstance initialized successfully.');
+            } else {
+              const errorMsg = '[Browser] Failed to initialize scrudInstance or it is not a function.';
+              console.error(errorMsg);
+              window.browserInitializationError = errorMsg;
+              throw new Error('Failed to initialize scrudInstance in browser.');
+            }
+          } catch (e) {
+            const errorMsg = `[Browser] Error during getScrudModuleDefault(opts) initialization: ${e.message}`;
+            console.error(errorMsg, e);
+            window.browserInitializationError = errorMsg;
+            throw e;
+          }
+        };
+        console.log('[Browser] window.initializeScrudInBrowser is now defined.');
+
+      } catch (importError) {
+        const errorMsg = `[Browser] Error in async IIFE (import or setup): ${importError.message}. Stack: ${importError.stack}`;
+        console.error(errorMsg, importError);
+        window.browserInitializationError = errorMsg;
+        // You could also try to make the error highly visible in the Playwright screenshot/trace if needed:
+        // document.body.innerHTML = `<pre style="color:red; font-size:18px;">${errorMsg.replace(/</g, '&lt;')}</pre>`;
+      }
+    })();
+  </script>
+</body>
+</html>
